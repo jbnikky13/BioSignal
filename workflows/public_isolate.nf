@@ -6,13 +6,11 @@ params.outdir = "results"
 
 process RESOLVE_ASSEMBLY {
     publishDir params.outdir, mode: "copy", overwrite: true
-    input:
-    path resolver
     output:
     path "assembly_manifest.json"
     script:
     """
-    python "${resolver}" ${params.biosample} --output assembly_manifest.json
+    python -m biosignal.resolve_assembly ${params.biosample} --output assembly_manifest.json
     """
 }
 
@@ -52,8 +50,7 @@ process AMRFINDERPLUS {
 }
 
 workflow {
-    resolver = file("${projectDir}/scripts/resolve_assembly.py")
-    assembly_manifest = RESOLVE_ASSEMBLY(resolver)
+    assembly_manifest = RESOLVE_ASSEMBLY()
     genome = DOWNLOAD_GENOME(assembly_manifest)
     AMRFINDERPLUS(genome)
 }
