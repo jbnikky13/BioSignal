@@ -60,6 +60,8 @@ Public / permitted data
 - [x] Real public NCBI BioSample integration test (opt-in)
 - [x] First end-to-end public-isolate evidence report
 - [x] NCBI BioSample → assembly resolution layer
+- [x] End-to-end genome download → AMRFinderPlus execution workflow
+- [x] GitHub Actions runner for reproducible public-isolate experiments
 - [x] Scheduled public integration workflow
 
 ## Phase 4 — Intelligence — NOT STARTED
@@ -125,3 +127,19 @@ BioSignal can now resolve public genome assemblies from a BioSample accession th
 The public integration workflow is scheduled weekly and can also be dispatched manually. It runs the opt-in NCBI integration test against live public data.
 
 NCBI documents BioSample, Assembly, AST phenotype and AMRFinderPlus genotype as linked fields in its Pathogen Detection ecosystem. The Datasets API also supports genome metadata lookup by BioSample accession. citeturn2search3turn0search1
+
+
+## End-to-end public isolate execution
+
+BioSignal now includes `workflows/public_isolate.nf`, which connects the real execution stages:
+
+1. Resolve a BioSample to an NCBI assembly.
+2. Download the genome and GFF3 package from NCBI Datasets.
+3. Locate the genomic FASTA.
+4. Run AMRFinderPlus.
+5. Capture the AMRFinderPlus version.
+6. Publish the experiment outputs as a GitHub Actions artifact.
+
+The workflow is exposed through `.github/workflows/public-isolate-experiment.yml` and can be manually dispatched with a BioSample accession. NCBI Datasets packages can contain genome sequences, GFF3 annotation and metadata, and NCBI documents assembly accessions as versioned identifiers for reproducibility. citeturn0search4turn0search10
+
+The workflow does not claim an analysis result until the run actually completes. This keeps the repository's scientific status separate from its pipeline definition.
