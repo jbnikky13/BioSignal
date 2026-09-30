@@ -50,4 +50,4 @@ jobs:
 
       - name: Compile and stub public isolate workflow
         run: |
-          nextflow run workflows/public_isolate.nf             --biosample "SAMN05170351"             --amrfinder_organism "Escherichia"             -stub-run
+          nextflow run workflows/public_isolate.nf             --biosample "SAMN05215988"             --amrfinder_organism "Escherichia"             -stub-run
