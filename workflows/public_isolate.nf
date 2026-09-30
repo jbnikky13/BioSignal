@@ -51,7 +51,7 @@ process AMRFINDERPLUS {
     script:
     """
     fasta=\$(find dataset -name '*_genomic.fna' -type f | head -1)
-    gff=\$(find dataset -type f \( -name '*.gff' -o -name '*.gff3' \) | head -1)
+    gff=\$(find dataset -type f -name '*.gff*' | head -1)
     test -s "\$fasta"
     test -s "\$gff"
     amrfinder --database_version > tool_versions.txt
