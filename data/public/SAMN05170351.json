@@ -1,0 +1,14 @@
+{
+  "biosample_accession": "SAMN05170351",
+  "organism": "Escherichia coli",
+  "sample_name": "DHQP1500357",
+  "sra_accession": "SRS1646085",
+  "bioproject": "PRJNA288601",
+  "isolate": "MUGSI_151",
+  "collection_date": "2014-11-03",
+  "geographic_location": "USA",
+  "host": "Homo sapiens",
+  "isolation_source": "urine",
+  "strain": "Achtman MLST 131",
+  "source_url": "https://www.ncbi.nlm.nih.gov/biosample/SAMN05170351"
+}
