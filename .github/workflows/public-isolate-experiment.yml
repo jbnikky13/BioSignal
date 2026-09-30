@@ -32,6 +32,13 @@ jobs:
           init-shell: bash
           cache-environment: true
 
+      - name: Install Nextflow
+        shell: bash -el {0}
+        run: |
+          curl -s https://get.nextflow.io | bash
+          sudo mv nextflow /usr/local/bin/nextflow
+          nextflow -version
+
       - name: Resolve and run isolate workflow
         shell: bash -el {0}
         run: |
