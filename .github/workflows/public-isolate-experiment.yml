@@ -57,6 +57,11 @@ jobs:
           python -m pip install "pytest>=8.0"
           pytest -q
 
+      - name: Validate live AMRFinder database
+        shell: bash -el {0}
+        run: |
+          amrfinder --database_version
+
       - name: Compile Nextflow workflow (stub)
         shell: bash -el {0}
         run: |
