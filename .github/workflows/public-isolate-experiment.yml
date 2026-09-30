@@ -38,7 +38,7 @@ jobs:
             --strict-channel-priority \
             -c conda-forge \
             -c bioconda \
-            ncbi-amrfinderplus
+            ncbi-amrfinderplus=4.2.7
           amrfinder --version
           amrfinder --database_version || true
           amrfinder -u
@@ -50,19 +50,41 @@ jobs:
           sudo mv nextflow /usr/local/bin/nextflow
           nextflow -version
 
-      - name: Resolve and run isolate workflow
+      - name: Install and run Python tests
         shell: bash -el {0}
         run: |
           python -m pip install .
-          nextflow run workflows/public_isolate.nf             --biosample "${{ inputs.biosample }}"             -resume
+          python -m pip install "pytest>=8.0"
+          pytest -q
 
+      - name: Compile Nextflow workflow (stub)
+        shell: bash -el {0}
+        run: |
+          nextflow run workflows/public_isolate.nf \
+            --biosample "${{ inputs.biosample }}" \
+            --amrfinder_organism "Escherichia" \
+            -stub-run
+
+      - name: Resolve and run isolate workflow
+        shell: bash -el {0}
+        env:
+          TMPDIR: ${{ runner.temp }}/amrfinder-tmp
+        run: |
+          mkdir -p "$TMPDIR"
+          nextflow run workflows/public_isolate.nf \
+            --biosample "${{ inputs.biosample }}" \
+            --amrfinder_organism "Escherichia" \
+            -with-report nextflow-report.html \
+            -with-trace nextflow-trace.txt \
+            -resume
       - name: Upload experiment results
         uses: actions/upload-artifact@v4
         with:
           name: biosignal-${{ inputs.biosample }}-experiment
           path: |
-            work/**
             results/**
+            nextflow-report.html
+            nextflow-trace.txt
             **/amrfinderplus.tsv
             **/tool_versions.txt
             **/assembly_manifest.json
