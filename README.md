@@ -2,39 +2,38 @@
 
 **Biological health intelligence for pathogen surveillance and antimicrobial-resistance signals.**
 
-BioSignal is an open-source research and engineering project for turning fragmented, aggregated biological and clinical observations into explainable signals about pathogens, antimicrobial resistance (AMR), treatment patterns, and temporal/geographic trends.
+BioSignal is an open-source research and engineering project for turning aggregated biological and clinical observations into explainable signals about pathogens, antimicrobial resistance (AMR), and temporal/geographic trends.
 
 > **Core principle:** intelligence, not identities.
 
-## Current pipeline
+## Current status
+
+**Phase 3 — Bioinformatics: IN PROGRESS**
+
+The project has completed the foundation and core data-engineering layers and is now building the first reproducible pathogen-genomics workflow.
+
+### Pipeline
 
 Public / permitted data  
 → ingestion  
 → normalization  
 → provenance  
 → data-quality assessment  
-→ explainable AMR signal
+→ pathogen taxonomy  
+→ genomic metadata  
+→ FASTA sequence parsing  
+→ sequence QC  
+→ genomic annotation  
+→ AMR intelligence
 
-The project currently includes a WHO GLASS-AMR source adapter and a transparent data-quality layer. WHO GLASS emphasizes improving AMR data quality, completeness and representativeness, and documents limitations such as selective testing, sampling bias and diagnostic constraints. BioSignal therefore treats data quality as part of the signal itself rather than an afterthought.
-
-## Data-quality model
-
-BioSignal evaluates three transparent dimensions:
-
-- sample sufficiency
-- metadata completeness
-- observation-window coverage
-
-These are engineering heuristics for research prioritization, not clinical or epidemiological confidence intervals.
-
-## Roadmap
+## Completed
 
 ### Phase 1 — Foundation
 - [x] Repository architecture
-- [x] Canonical observation schema
+- [x] Canonical AMR observation schema
 - [x] Deterministic resistance signal engine
 - [x] Unit tests
-- [x] Public dataset source definition
+- [x] Public data-source definitions
 
 ### Phase 2 — Data engineering
 - [x] CSV ingestion
@@ -42,28 +41,56 @@ These are engineering heuristics for research prioritization, not clinical or ep
 - [x] Runtime public-data fetcher
 - [x] Dataset provenance
 - [x] Data-quality assessment
-- [ ] Real-data normalization adapter
-- [ ] Reproducible ingestion command
+- [x] Explicit source-to-canonical normalization layer
 
-### Phase 3 — Bioinformatics
-- [ ] Pathogen taxonomy normalization
-- [ ] FASTA/FASTQ support
-- [ ] Sequence QC metadata
-- [ ] Genomic annotation
+### Phase 3 — Bioinformatics — IN PROGRESS
+- [x] Pathogen taxonomy normalization with NCBI TaxIDs
+- [x] NCBI genomic metadata/query layer
+- [x] FASTA parser
+- [x] Basic sequence QC
+- [ ] FASTQ support
+- [ ] Genome feature extraction
+- [ ] AMR gene annotation integration
+- [ ] Genotype/phenotype linkage
 - [ ] Reproducible Nextflow/Snakemake workflow
 
 ### Phase 4 — Intelligence
 - [ ] Temporal anomaly detection
 - [ ] Geographic aggregation
 - [ ] AMR trend analysis
-- [ ] Molecular resistance markers
+- [ ] Genomic resistance-marker analysis
+- [ ] Genotype/phenotype relationship analysis
 - [ ] Signal calibration against published surveillance metrics
 
 ### Phase 5 — Interface
 - [ ] Research dashboard
 - [ ] Signal explorer
-- [ ] Dataset provenance view
+- [ ] Dataset provenance explorer
 - [ ] Exportable intelligence reports
+
+## What the new genomic layer does
+
+BioSignal can now take a FASTA record:
+
+`>contig-1`
+`ACGT...`
+
+and produce reproducible QC metadata:
+
+- sequence length
+- GC fraction
+- ambiguous-base count
+- N fraction
+- QC status
+- review warnings
+
+The QC layer is deliberately lightweight and transparent. It is intended to identify records that require review before downstream analysis; it is **not** a clinical quality assessment and does not infer antimicrobial resistance.
+
+## Genomic data sources
+
+BioSignal uses NCBI Datasets as its genomic-data access layer. NCBI Datasets supports genome retrieval by taxonomy ID/name or accession and can provide sequence, annotation and sequence-report data.
+
+The longer-term pathogen-genomics integration is NCBI Pathogen Detection, which documents workflows involving assembly, genomic clustering, SNP-based phylogenetic analysis and AMR gene/protein identification with AMRFinderPlus.
 
 ## Safety and governance
 
@@ -71,11 +98,6 @@ BioSignal is a research project, not a diagnostic or clinical decision-support s
 
 Do not commit names, contact details, medical record numbers, raw patient records, private laboratory records, credentials, or access tokens.
 
-Use public, synthetic, or properly governed de-identified data. Any clinical deployment would require appropriate validation, governance, security, and regulatory review.
+Use public, synthetic, or properly governed de-identified data. Genomic observations should remain traceable to their source accession and method.
 
-
-### Genomic integration
-
-BioSignal now includes an NCBI Datasets layer for bounded genome metadata queries and reproducible genome-package command construction. NCBI supports genome retrieval by taxon or accession and can include sequence, annotation and sequence-report files. The next milestone is a small reproducible bacterial dataset, followed by sequence QC and AMR annotation.
-
-NCBI Pathogen Detection is the longer-term bridge to pathogen genomics and AMR: its documented workflow includes assembly, genomic clustering, SNP-based phylogenetic analysis and AMR gene/protein identification using AMRFinderPlus.
+Any clinical deployment would require appropriate validation, governance, security, and regulatory review.
