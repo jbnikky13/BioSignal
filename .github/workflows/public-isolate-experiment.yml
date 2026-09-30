@@ -1,0 +1,50 @@
+name: BioSignal public isolate experiment
+
+on:
+  workflow_dispatch:
+    inputs:
+      biosample:
+        description: "NCBI BioSample accession"
+        required: true
+        default: "SAMN05170351"
+
+jobs:
+  experiment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install NCBI Datasets CLI
+        run: |
+          curl -L https://ftp.ncbi.nlm.nih.gov/pub/datasets/command-line/v2/linux-amd64/datasets             -o datasets
+          chmod +x datasets
+          sudo mv datasets /usr/local/bin/datasets
+          datasets version
+
+      - name: Install AMRFinderPlus
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-name: biosignal
+          create-args: >-
+            python=3.12
+            ncbi-amrfinderplus
+            unzip
+          init-shell: bash
+          cache-environment: true
+
+      - name: Resolve and run isolate workflow
+        shell: bash -el {0}
+        run: |
+          python -m pip install .
+          nextflow run workflows/public_isolate.nf             --biosample "${{ inputs.biosample }}"             -resume
+
+      - name: Upload experiment results
+        uses: actions/upload-artifact@v4
+        with:
+          name: biosignal-${{ inputs.biosample }}-experiment
+          path: |
+            work/**
+            results/**
+            **/amrfinderplus.tsv
+            **/tool_versions.txt
+            **/assembly_manifest.json
