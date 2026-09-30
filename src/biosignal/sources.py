@@ -1,10 +1,4 @@
-"""Public data-source definitions for BioSignal.
-
-The WHO GLASS dashboard documents that global AMR data are retrieved from
-the XMART RELAY_GLASS_AMR table. BioSignal keeps the endpoint definition
-explicit so ingestion remains auditable and reproducible.
-"""
-
+"""Public data-source definitions for BioSignal."""
 from urllib.parse import urlencode
 
 WHO_GLASS_AMR_ENDPOINT = "https://xmart-api-public.who.int/DATA_/RELAY_GLASS_AMR"
@@ -34,4 +28,5 @@ def who_glass_amr_url(
         params.append(("$top", str(top)))
     if csv:
         params.append(("$format", "csv"))
-    return WHO_GLASS_AMR_ENDPOINT + ("?" + urlencode(params) if params else "")
+    # Keep OData system-query option names readable for audit logs/tests.
+    return WHO_GLASS_AMR_ENDPOINT + ("?" + urlencode(params, safe="$") if params else "")
