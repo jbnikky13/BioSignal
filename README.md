@@ -4,125 +4,71 @@
 
 BioSignal is an open-source research and engineering project for turning fragmented, aggregated biological and clinical observations into explainable signals about pathogens, antimicrobial resistance (AMR), treatment patterns, and temporal/geographic trends.
 
-> **Core principle:** intelligence, not identities. BioSignal is designed around aggregated or de-identified data and does not attempt to expose or infer individual patient identities.
+> **Core principle:** intelligence, not identities.
 
-## Why BioSignal?
+## Current pipeline
 
-Healthcare data is often fragmented across laboratories, pharmacies, hospitals, surveillance programs, research datasets, and public-health reports. BioSignal explores the engineering layer that can normalize these observations and surface reproducible signals.
+Public / permitted data  
+→ ingestion  
+→ normalization  
+→ provenance  
+→ data-quality assessment  
+→ explainable AMR signal
 
-The first milestone is deliberately **not** a diagnostic model. It is a transparent signal pipeline that can be tested against real public datasets.
+The project currently includes a WHO GLASS-AMR source adapter and a transparent data-quality layer. WHO GLASS emphasizes improving AMR data quality, completeness and representativeness, and documents limitations such as selective testing, sampling bias and diagnostic constraints. BioSignal therefore treats data quality as part of the signal itself rather than an afterthought.
 
-## Initial scope
+## Data-quality model
 
-- Pathogen profiles and standardized organism metadata
-- Antimicrobial susceptibility / resistance observations
-- Temporal trend detection
-- Geographic aggregation
-- Data-quality and completeness metrics
-- Explainable AMR signals
-- Reproducible research pipelines
-- Later: genomic and sequence-derived signals
+BioSignal evaluates three transparent dimensions:
 
-## Architecture
+- sample sufficiency
+- metadata completeness
+- observation-window coverage
 
-```
-Public / permitted data
-        |
-        v
-  Ingestion + validation
-        |
-        v
-  Normalization layer
-        |
-        +---- pathogen profiles
-        +---- antimicrobial observations
-        +---- susceptibility / resistance
-        +---- geography + time
-        |
-        v
-    Signal engine
-        |
-        +---- trend signals
-        +---- anomaly signals
-        +---- resistance signals
-        |
-        v
- Explainable intelligence
-        |
-        v
- Researchers / laboratories / stewardship / public health
-```
+These are engineering heuristics for research prioritization, not clinical or epidemiological confidence intervals.
 
-## MVP
-
-The current MVP defines a small, testable data model and a deterministic AMR signal engine.
-
-A signal is produced from aggregated observations and includes:
-
-- organism
-- antimicrobial
-- observation window
-- sample count
-- resistance proportion
-- previous-period comparison
-- confidence metadata
-- human-readable explanation
-
-No patient-level inference is performed.
-
-## Project roadmap
+## Roadmap
 
 ### Phase 1 — Foundation
 - [x] Repository architecture
 - [x] Canonical observation schema
 - [x] Deterministic resistance signal engine
 - [x] Unit tests
-- [ ] Public dataset adapter
+- [x] Public dataset source definition
 
-### Phase 2 — Bioinformatics
-- [ ] FASTA/FASTQ ingestion
-- [ ] Sequence quality-control metadata
-- [ ] Pathogen/genomic annotation
-- [ ] Reproducible workflow with Nextflow or Snakemake
+### Phase 2 — Data engineering
+- [x] CSV ingestion
+- [x] WHO GLASS-AMR query builder
+- [x] Runtime public-data fetcher
+- [x] Dataset provenance
+- [x] Data-quality assessment
+- [ ] Real-data normalization adapter
+- [ ] Reproducible ingestion command
 
-### Phase 3 — Intelligence
+### Phase 3 — Bioinformatics
+- [ ] Pathogen taxonomy normalization
+- [ ] FASTA/FASTQ support
+- [ ] Sequence QC metadata
+- [ ] Genomic annotation
+- [ ] Reproducible Nextflow/Snakemake workflow
+
+### Phase 4 — Intelligence
 - [ ] Temporal anomaly detection
 - [ ] Geographic aggregation
-- [ ] Resistance trend forecasting research
-- [ ] Signal confidence calibration
+- [ ] AMR trend analysis
+- [ ] Molecular resistance markers
+- [ ] Signal calibration against published surveillance metrics
 
-### Phase 4 — Interface
+### Phase 5 — Interface
 - [ ] Research dashboard
 - [ ] Signal explorer
 - [ ] Dataset provenance view
 - [ ] Exportable intelligence reports
 
-## Safety and data governance
+## Safety and governance
 
-BioSignal is a research project, not a clinical decision-support system.
+BioSignal is a research project, not a diagnostic or clinical decision-support system.
 
-Do not commit:
-- names
-- phone numbers
-- addresses
-- medical record numbers
-- raw patient records
-- private laboratory records
-- credentials or access tokens
+Do not commit names, contact details, medical record numbers, raw patient records, private laboratory records, credentials, or access tokens.
 
-Use public, synthetic, or properly governed de-identified datasets. Any future clinical deployment would require appropriate validation, governance, security, and regulatory review.
-
-## Development
-
-Requires Python 3.11+.
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
-pytest
-```
-
-## License
-
-Apache-2.0
+Use public, synthetic, or properly governed de-identified data. Any clinical deployment would require appropriate validation, governance, security, and regulatory review.
