@@ -6,7 +6,7 @@ on:
       biosample:
         description: "NCBI BioSample accession"
         required: true
-        default: "SAMN05170351"
+        default: "SAMN05215988"
 
 jobs:
   experiment:
