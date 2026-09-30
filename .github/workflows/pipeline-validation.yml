@@ -1,0 +1,49 @@
+name: BioSignal pipeline validation
+
+on:
+  push:
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "scripts/**"
+      - "workflows/**"
+      - "pyproject.toml"
+      - "pytest.ini"
+      - ".github/workflows/**"
+  pull_request:
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "scripts/**"
+      - "workflows/**"
+      - "pyproject.toml"
+      - "pytest.ini"
+      - ".github/workflows/**"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install package and test
+        run: |
+          python -m pip install .
+          python -m pip install "pytest>=8.0"
+          pytest -q
+
+      - name: Install Nextflow
+        run: |
+          curl -s https://get.nextflow.io | bash
+          sudo mv nextflow /usr/local/bin/nextflow
+          nextflow -version
+
+      - name: Compile public isolate workflow
+        run: |
+          nextflow run workflows/public_isolate.nf             --biosample "SAMN05170351"             --amrfinder_organism "Escherichia"             -stub-run
