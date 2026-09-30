@@ -25,7 +25,7 @@ process DOWNLOAD_GENOME {
     output:
     path "dataset"
     script:
-    def meta = new groovy.json.JsonSlurper().parse(manifest)
+    def meta = new groovy.json.JsonSlurper().parseText(manifest.text)
     def assembly = meta.assembly_accession
     """
     datasets download genome accession ${assembly} --include genome,gff3 --no-progressbar --filename dataset.zip
