@@ -72,3 +72,10 @@ BioSignal is a research project, not a diagnostic or clinical decision-support s
 Do not commit names, contact details, medical record numbers, raw patient records, private laboratory records, credentials, or access tokens.
 
 Use public, synthetic, or properly governed de-identified data. Any clinical deployment would require appropriate validation, governance, security, and regulatory review.
+
+
+### Genomic integration
+
+BioSignal now includes an NCBI Datasets layer for bounded genome metadata queries and reproducible genome-package command construction. NCBI supports genome retrieval by taxon or accession and can include sequence, annotation and sequence-report files. The next milestone is a small reproducible bacterial dataset, followed by sequence QC and AMR annotation.
+
+NCBI Pathogen Detection is the longer-term bridge to pathogen genomics and AMR: its documented workflow includes assembly, genomic clustering, SNP-based phylogenetic analysis and AMR gene/protein identification using AMRFinderPlus.
