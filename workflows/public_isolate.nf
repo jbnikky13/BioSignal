@@ -28,7 +28,6 @@ process DOWNLOAD_GENOME {
 }
 
 process AMRFINDERPLUS {
-    tag "$assembly"
     input:
     path dataset
     output:
@@ -37,9 +36,9 @@ process AMRFINDERPLUS {
     script:
     """
     fasta=$(find dataset -name '*_genomic.fna' -type f | head -1)
-    test -n "$fasta"
+    test -n "\$fasta"
     amrfinder --version > tool_versions.txt
-    amrfinder -n "$fasta" -o amrfinderplus.tsv
+    amrfinder -n "\$fasta" -o amrfinderplus.tsv
     """
 }
 
