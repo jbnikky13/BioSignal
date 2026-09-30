@@ -30,6 +30,14 @@ def detect_amr_signal(
     This is a research heuristic, not a clinical recommendation or
     epidemiological threshold.
     """
+    previous_rate = previous.resistance_rate if previous else None
+    raw_change = (
+        current.resistance_rate - previous_rate
+        if previous_rate is not None
+        else None
+    )
+    change = round(raw_change, 12) if raw_change is not None else None
+
     if current.tested_count < minimum_samples:
         severity = "insufficient_data"
         explanation = (
@@ -40,19 +48,13 @@ def detect_amr_signal(
             current.organism,
             current.antimicrobial,
             current.resistance_rate,
-            previous.resistance_rate if previous else None,
-            (
-                current.resistance_rate - previous.resistance_rate
-                if previous else None
-            ),
+            previous_rate,
+            change,
             current.tested_count,
             current.region,
             severity,
             explanation,
         )
-
-    previous_rate = previous.resistance_rate if previous else None
-    change = current.resistance_rate - previous_rate if previous_rate is not None else None
 
     if current.resistance_rate >= alert_rate or (
         change is not None and change >= alert_change
