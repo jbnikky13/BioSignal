@@ -62,6 +62,7 @@ Public / permitted data
 - [x] NCBI BioSample → assembly resolution layer
 - [x] End-to-end genome download → AMRFinderPlus execution workflow
 - [x] GitHub Actions runner for reproducible public-isolate experiments
+- [x] Lightweight CI compile/test gate for the Nextflow workflow
 - [x] Scheduled public integration workflow
 
 ## Phase 4 — Intelligence — NOT STARTED
@@ -143,3 +144,19 @@ BioSignal now includes `workflows/public_isolate.nf`, which connects the real ex
 The workflow is exposed through `.github/workflows/public-isolate-experiment.yml` and can be manually dispatched with a BioSample accession. NCBI Datasets packages can contain genome sequences, GFF3 annotation and metadata, and NCBI documents assembly accessions as versioned identifiers for reproducibility. citeturn0search4turn0search10
 
 The workflow does not claim an analysis result until the run actually completes. This keeps the repository's scientific status separate from its pipeline definition.
+
+
+### Pipeline reliability hardening
+
+The public-isolate pipeline now has a separate lightweight validation workflow. Every relevant push/PR can compile the Nextflow workflow in stub mode and run the Python test suite before the live NCBI/AMRFinderPlus experiment is manually dispatched.
+
+The live experiment is hardened to:
+
+- pin AMRFinderPlus software to 4.2.7;
+- initialize and report the AMRFinderPlus database version;
+- retrieve both genomic FASTA and GFF3 from the NCBI genome package;
+- run AMRFinderPlus with nucleotide + GFF evidence and an *Escherichia* organism scope;
+- fail if the expected FASTA, GFF or AMRFinder output is missing;
+- publish the assembly manifest, AMRFinder output, tool-version record and Nextflow execution reports as artifacts.
+
+NCBI documents that AMRFinderPlus accepts assembled nucleotide sequence and can use GFF annotation, and NCBI's own CI examples exercise combined nucleotide/protein/GFF modes with organism-specific mutation screening. citeturn0search0turn4search0
