@@ -4,17 +4,15 @@ params.biosample = "SAMN05170351"
 params.outdir = "results"
 
 process RESOLVE_ASSEMBLY {
-    tag "$biosample"
     output:
     path "assembly_manifest.json"
     script:
     """
-    python scripts/resolve_assembly.py ${biosample} --output assembly_manifest.json
+    python scripts/resolve_assembly.py ${params.biosample} --output assembly_manifest.json
     """
 }
 
 process DOWNLOAD_GENOME {
-    tag "$assembly"
     input:
     path manifest
     output:
