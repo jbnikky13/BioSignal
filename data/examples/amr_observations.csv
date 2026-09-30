@@ -1,0 +1,5 @@
+organism,antimicrobial,period_start,period_end,tested_count,resistant_count,region,source
+Escherichia coli,ciprofloxacin,2026-01-01,2026-03-31,100,20,example-region,synthetic
+Escherichia coli,ciprofloxacin,2026-04-01,2026-06-30,120,42,example-region,synthetic
+Klebsiella pneumoniae,ceftriaxone,2026-01-01,2026-03-31,80,12,example-region,synthetic
+Klebsiella pneumoniae,ceftriaxone,2026-04-01,2026-06-30,90,27,example-region,synthetic
