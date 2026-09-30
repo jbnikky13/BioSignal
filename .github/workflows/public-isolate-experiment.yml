@@ -21,16 +21,27 @@ jobs:
           sudo mv datasets /usr/local/bin/datasets
           datasets version
 
-      - name: Install AMRFinderPlus
+      - name: Set up micromamba
         uses: mamba-org/setup-micromamba@v2
         with:
           environment-name: biosignal
           create-args: >-
             python=3.12
-            ncbi-amrfinderplus
             unzip
           init-shell: bash
           cache-environment: true
+
+      - name: Install AMRFinderPlus
+        shell: bash -el {0}
+        run: |
+          micromamba install -y \
+            --strict-channel-priority \
+            -c conda-forge \
+            -c bioconda \
+            ncbi-amrfinderplus
+          amrfinder --version
+          amrfinder --database_version || true
+          amrfinder -u
 
       - name: Install Nextflow
         shell: bash -el {0}
