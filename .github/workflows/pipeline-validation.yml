@@ -44,6 +44,10 @@ jobs:
           sudo mv nextflow /usr/local/bin/nextflow
           nextflow -version
 
-      - name: Compile public isolate workflow
+      - name: Validate packaged resolver
+        run: |
+          python -m biosignal.resolve_assembly --help
+
+      - name: Compile and stub public isolate workflow
         run: |
           nextflow run workflows/public_isolate.nf             --biosample "SAMN05170351"             --amrfinder_organism "Escherichia"             -stub-run
