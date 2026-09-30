@@ -7,28 +7,30 @@ params.outdir = "results"
 process RESOLVE_ASSEMBLY {
     publishDir params.outdir, mode: "copy", overwrite: true
     output:
-    path "assembly_manifest.json"
+    tuple path("assembly_manifest.json"), path("assembly_accession.txt")
     script:
     """
     python -m biosignal.resolve_assembly ${params.biosample} --output assembly_manifest.json
+    python -c 'import json; print(json.load(open("assembly_manifest.json", encoding="utf-8"))["assembly_accession"])' > assembly_accession.txt
     """
 
     stub:
     """
-    echo "stub" > assembly_manifest.json
+    echo '{"biosample_accession":"${params.biosample}","assembly_accession":"GCA_STUB.1"}' > assembly_manifest.json
+    echo "GCA_STUB.1" > assembly_accession.txt
     """
 }
 
 process DOWNLOAD_GENOME {
     input:
-    path manifest
+    tuple path(manifest), path(assembly_accession_file)
     output:
     path "dataset"
     script:
-    def meta = new groovy.json.JsonSlurper().parseText(manifest.text)
-    def assembly = meta.assembly_accession
     """
-    datasets download genome accession ${assembly} --include genome,gff3 --no-progressbar --filename dataset.zip
+    assembly=\$(cat ${assembly_accession_file})
+    test -n "\$assembly"
+    datasets download genome accession "\$assembly" --include genome,gff3 --no-progressbar --filename dataset.zip
     mkdir dataset
     unzip -q dataset.zip -d dataset
     test -s dataset/ncbi_dataset/data/assembly_data_report.jsonl
@@ -67,7 +69,7 @@ process AMRFINDERPLUS {
 }
 
 workflow {
-    assembly_manifest = RESOLVE_ASSEMBLY()
-    genome = DOWNLOAD_GENOME(assembly_manifest)
+    assembly = RESOLVE_ASSEMBLY()
+    genome = DOWNLOAD_GENOME(assembly)
     AMRFINDERPLUS(genome)
 }
