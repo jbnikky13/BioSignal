@@ -1,0 +1,6 @@
+{
+  "biosample_accession": "SAMN05170351",
+  "lookup_endpoint": "NCBI Datasets v2 genome/biosample",
+  "status": "pending_live_resolution",
+  "purpose": "Resolve the current public assembly accession before downloading or running AMRFinderPlus."
+}
