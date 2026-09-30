@@ -57,7 +57,7 @@ Public / permitted data
 - [x] Isolate-level identifiers and matching
 - [x] AMR evidence harmonization
 - [x] Reproducible Nextflow workflow skeleton
-- [ ] Real public dataset integration test
+- [x] Real public NCBI BioSample integration test (opt-in)
 
 ## Phase 4 — Intelligence — NOT STARTED
 - [ ] Temporal anomaly detection
@@ -91,3 +91,16 @@ Use public, synthetic, or properly governed de-identified data. Any clinical dep
 ## Workflow milestone
 
 BioSignal now has canonical isolate identity fields (BioSample, assembly and SRA accessions) and AMR evidence harmonization that preserves AMRFinderPlus method, identity, coverage, software version and reference-catalog version. A Nextflow workflow skeleton provides a reproducible execution boundary for FASTA → AMRFinderPlus analysis. Production runs should pin tool/database versions and validate against a public dataset before interpretation.
+
+
+## First public integration dataset
+
+BioSignal now includes an opt-in live NCBI BioSample integration test using SAMN05170351. NCBI documents this public Escherichia coli isolate as part of PRJNA288601, with sequencing data and an antibiogram. The integration client retrieves the public BioSample record through NCBI E-utilities and normalizes core isolate metadata.
+
+Run the live check with:
+
+    BIOSIGNAL_LIVE_NCBI=1 pytest -m integration
+
+The repository also keeps a small metadata-only fixture under data/public/ so the expected public record is reviewable without requiring a network call.
+
+The integration layer deliberately stops at public metadata. It does not download patient records, private clinical data, or large genome collections.
