@@ -59,6 +59,8 @@ Public / permitted data
 - [x] Reproducible Nextflow workflow skeleton
 - [x] Real public NCBI BioSample integration test (opt-in)
 - [x] First end-to-end public-isolate evidence report
+- [x] NCBI BioSample → assembly resolution layer
+- [x] Scheduled public integration workflow
 
 ## Phase 4 — Intelligence — NOT STARTED
 - [ ] Temporal anomaly detection
@@ -114,3 +116,12 @@ BioSignal now has a reproducible evidence-report layer for public isolate SAMN05
 The report intentionally does not claim genotype-phenotype causality. Isolate-level concordance requires verified matching identifiers and pinned genomic-analysis versions.
 
 See `reports/SAMN05170351.md`.
+
+
+### Assembly-resolution milestone
+
+BioSignal can now resolve public genome assemblies from a BioSample accession through the NCBI Datasets v2 genome/BioSample endpoint. This closes the metadata-to-genome handoff without hard-coding an assembly accession.
+
+The public integration workflow is scheduled weekly and can also be dispatched manually. It runs the opt-in NCBI integration test against live public data.
+
+NCBI documents BioSample, Assembly, AST phenotype and AMRFinderPlus genotype as linked fields in its Pathogen Detection ecosystem. The Datasets API also supports genome metadata lookup by BioSample accession. citeturn2search3turn0search1
