@@ -58,6 +58,7 @@ Public / permitted data
 - [x] AMR evidence harmonization
 - [x] Reproducible Nextflow workflow skeleton
 - [x] Real public NCBI BioSample integration test (opt-in)
+- [x] First end-to-end public-isolate evidence report
 
 ## Phase 4 — Intelligence — NOT STARTED
 - [ ] Temporal anomaly detection
@@ -104,3 +105,12 @@ Run the live check with:
 The repository also keeps a small metadata-only fixture under data/public/ so the expected public record is reviewable without requiring a network call.
 
 The integration layer deliberately stops at public metadata. It does not download patient records, private clinical data, or large genome collections.
+
+
+## First end-to-end experiment
+
+BioSignal now has a reproducible evidence-report layer for public isolate SAMN05170351. The report connects public BioSample metadata, genomic AMR evidence and submitted AST phenotype as separate evidence streams.
+
+The report intentionally does not claim genotype-phenotype causality. Isolate-level concordance requires verified matching identifiers and pinned genomic-analysis versions.
+
+See `reports/SAMN05170351.md`.
