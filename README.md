@@ -160,3 +160,10 @@ The live experiment is hardened to:
 - publish the assembly manifest, AMRFinder output, tool-version record and Nextflow execution reports as artifacts.
 
 NCBI documents that AMRFinderPlus accepts assembled nucleotide sequence and can use GFF annotation, and NCBI's own CI examples exercise combined nucleotide/protein/GFF modes with organism-specific mutation screening. citeturn0search0turn4search0
+
+
+### CI and public-isolate execution note
+
+The validation workflow uses Nextflow **stub mode** with explicit `stub:` blocks for every process. This prevents CI validation from contacting NCBI or depending on live external data. The live experiment remains a separate manually dispatched workflow.
+
+The default live validation sample is now `SAMN05215988`, an *Escherichia coli* BioSample associated with a public GenBank assembly (GCA_012849755.1), rather than `SAMN05170351`. NCBI documents that many Pathogen Detection isolates have assemblies that exist only inside the Pathogen Detection system and are not yet deposited in GenBank; those cannot be downloaded through the standard `datasets download genome accession` path. citeturn5search5turn7search0
