@@ -8,13 +8,14 @@ process RESOLVE_ASSEMBLY {
     publishDir params.outdir, mode: "copy", overwrite: true
     output:
     path "assembly_manifest.json"
-    stub:
-    """
-    echo "stub" > assembly_manifest.json
-    """
     script:
     """
     python -m biosignal.resolve_assembly ${params.biosample} --output assembly_manifest.json
+    """
+
+    stub:
+    """
+    echo "stub" > assembly_manifest.json
     """
 }
 
@@ -23,11 +24,6 @@ process DOWNLOAD_GENOME {
     path manifest
     output:
     path "dataset"
-    stub:
-    """
-    mkdir -p dataset
-    touch dataset/stub
-    """
     script:
     def meta = new groovy.json.JsonSlurper().parse(manifest)
     def assembly = meta.assembly_accession
@@ -36,6 +32,12 @@ process DOWNLOAD_GENOME {
     mkdir dataset
     unzip -q dataset.zip -d dataset
     test -s dataset/ncbi_dataset/data/assembly_data_report.jsonl
+    """
+
+    stub:
+    """
+    mkdir -p dataset
+    touch dataset/stub
     """
 }
 
@@ -46,11 +48,6 @@ process AMRFINDERPLUS {
     output:
     path "amrfinderplus.tsv"
     path "tool_versions.txt"
-    stub:
-    """
-    echo "stub" > amrfinderplus.tsv
-    echo "stub" > tool_versions.txt
-    """
     script:
     """
     fasta=\$(find dataset -name '*_genomic.fna' -type f | head -1)
@@ -60,6 +57,12 @@ process AMRFINDERPLUS {
     amrfinder --database_version > tool_versions.txt
     amrfinder --plus --organism ${params.amrfinder_organism} -n "\$fasta" -g "\$gff" --print_node -o amrfinderplus.tsv
     test -s amrfinderplus.tsv
+    """
+
+    stub:
+    """
+    echo "stub" > amrfinderplus.tsv
+    echo "stub" > tool_versions.txt
     """
 }
 
