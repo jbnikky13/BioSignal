@@ -2,6 +2,12 @@ name: Public BioSignal integration
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/public-integration.yml"
+      - "src/**"
+      - "pyproject.toml"
+      - "tests/**"
   schedule:
     - cron: "17 2 * * 1"
 
