@@ -48,8 +48,8 @@ Public / permitted data
 - [x] NCBI genomic metadata/query layer
 - [x] FASTA parser
 - [x] Basic sequence QC
-- [ ] FASTQ support
-- [ ] Genome feature extraction
+- [x] FASTQ support
+- [x] Genome feature extraction
 - [ ] AMR gene annotation integration
 - [ ] Genotype/phenotype linkage
 - [ ] Reproducible Nextflow/Snakemake workflow
@@ -84,7 +84,9 @@ and produce reproducible QC metadata:
 - QC status
 - review warnings
 
-The QC layer is deliberately lightweight and transparent. It is intended to identify records that require review before downstream analysis; it is **not** a clinical quality assessment and does not infer antimicrobial resistance.
+The QC layer is deliberately lightweight and transparent.
+
+BioSignal now also accepts standard four-line FASTQ records and converts Phred+33 quality characters into integer quality scores. The feature layer extracts transparent sequence-level statistics and configurable k-mer counts. K-mers containing ambiguous bases are skipped. These features are representations for downstream research; they do not by themselves identify genes or infer antimicrobial resistance. It is intended to identify records that require review before downstream analysis; it is **not** a clinical quality assessment and does not infer antimicrobial resistance.
 
 ## Genomic data sources
 
