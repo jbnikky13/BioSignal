@@ -1,0 +1,13 @@
+{
+  "biosample_accession": "SAMN05170351",
+  "status": "awaiting_live_resolution",
+  "analysis_status": "not_yet_run",
+  "required_next_steps": [
+    "resolve current assembly accession",
+    "download assembly with NCBI Datasets",
+    "run pinned AMRFinderPlus",
+    "capture tool and database versions",
+    "verify AST record belongs to the same isolate",
+    "generate final evidence report"
+  ]
+}
