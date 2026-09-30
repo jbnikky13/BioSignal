@@ -54,9 +54,9 @@ Public / permitted data
 - [x] GFF3 annotation parsing
 - [x] AMR result ingestion
 - [x] Evidence-aware genotype/phenotype linkage
-- [ ] Isolate-level identifiers and matching
-- [ ] AMR evidence harmonization
-- [ ] Reproducible Nextflow/Snakemake workflow
+- [x] Isolate-level identifiers and matching
+- [x] AMR evidence harmonization
+- [x] Reproducible Nextflow workflow skeleton
 - [ ] Real public dataset integration test
 
 ## Phase 4 — Intelligence — NOT STARTED
@@ -86,3 +86,8 @@ BioSignal is a research project, not a diagnostic or clinical decision-support s
 Do not commit names, contact details, medical record numbers, raw patient records, private laboratory records, credentials, or access tokens.
 
 Use public, synthetic, or properly governed de-identified data. Any clinical deployment would require appropriate validation, governance, security, and regulatory review.
+
+
+## Workflow milestone
+
+BioSignal now has canonical isolate identity fields (BioSample, assembly and SRA accessions) and AMR evidence harmonization that preserves AMRFinderPlus method, identity, coverage, software version and reference-catalog version. A Nextflow workflow skeleton provides a reproducible execution boundary for FASTA → AMRFinderPlus analysis. Production runs should pin tool/database versions and validate against a public dataset before interpretation.
