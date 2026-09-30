@@ -50,7 +50,7 @@ process AMRFINDERPLUS {
 }
 
 workflow {
-    assembly_manifest = RESOLVE_ASSEMBLY(params.biosample)
+    assembly_manifest = RESOLVE_ASSEMBLY()
     genome = DOWNLOAD_GENOME(assembly_manifest)
     AMRFINDERPLUS(genome)
 }
