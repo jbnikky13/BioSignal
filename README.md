@@ -50,7 +50,7 @@ Public / permitted data
 - [x] Basic sequence QC
 - [x] FASTQ support
 - [x] Genome feature extraction
-- [ ] AMR gene annotation integration
+- [x] AMR result ingestion layer
 - [ ] Genotype/phenotype linkage
 - [ ] Reproducible Nextflow/Snakemake workflow
 
@@ -103,3 +103,10 @@ Do not commit names, contact details, medical record numbers, raw patient record
 Use public, synthetic, or properly governed de-identified data. Genomic observations should remain traceable to their source accession and method.
 
 Any clinical deployment would require appropriate validation, governance, security, and regulatory review.
+
+
+## Annotation and AMR layer
+
+BioSignal now parses NCBI-style GFF3 annotations into structured genome features and can normalize tabular AMRFinderPlus results into traceable AMR-hit records. NCBI provides GFF3 annotations with feature coordinates and attributes, while AMRFinderPlus uses curated reference genes and HMMs to identify AMR genes and resistance-associated point mutations. BioSignal treats those results as external evidence and preserves method/reference/coverage/identity metadata rather than implementing an unvalidated resistance classifier.
+
+This phase does **not** claim that detection of an AMR-associated gene proves phenotypic resistance in an individual isolate. Genotype-to-phenotype linkage remains a separate research milestone.
