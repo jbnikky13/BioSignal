@@ -22,25 +22,26 @@ jobs:
     timeout-minutes: 30
     env:
       BIOSAMPLE: ${{ inputs.biosample }}
-      TMPDIR: ${{ runner.temp }}/amrfinder-tmp
       AMRFINDER_ORGANISM: Escherichia
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Validate BioSample input
         shell: bash
         run: |
           set -euo pipefail
-          [[ "$BIOSAMPLE" =~ ^SAMN[0-9]+$ ]] || {
+          if [[ ! "$BIOSAMPLE" =~ ^SAMN[0-9]+$ ]]; then
             echo "Invalid BioSample accession: $BIOSAMPLE" >&2
             exit 1
-          }
+          fi
 
       - name: Install NCBI Datasets CLI
         shell: bash
         run: |
           set -euo pipefail
-          curl -fsSL https://ftp.ncbi.nlm.nih.gov/pub/datasets/command-line/v2/linux-amd64/datasets             -o datasets
+          curl -fsSL https://ftp.ncbi.nlm.nih.gov/pub/datasets/command-line/v2/linux-amd64/datasets -o datasets
           chmod +x datasets
           sudo mv datasets /usr/local/bin/datasets
           datasets version
@@ -49,7 +50,7 @@ jobs:
         uses: mamba-org/setup-micromamba@v2
         with:
           environment-name: biosignal
-          create-args: >-
+          create-args: |
             python=3.12
             unzip
           init-shell: bash
@@ -59,7 +60,7 @@ jobs:
         shell: bash -el {0}
         run: |
           set -euo pipefail
-          micromamba install -y             --strict-channel-priority             -c conda-forge             -c bioconda             ncbi-amrfinderplus=4.2.7
+          micromamba install -y --strict-channel-priority -c conda-forge -c bioconda ncbi-amrfinderplus=4.2.7
           amrfinder --version
           amrfinder -u
           amrfinder --database_version
@@ -69,7 +70,8 @@ jobs:
         shell: bash -el {0}
         run: |
           set -euo pipefail
-          curl -fsSL https://get.nextflow.io | bash
+          curl -fsSL https://get.nextflow.io -o nextflow-install
+          bash nextflow-install
           sudo mv nextflow /usr/local/bin/nextflow
           nextflow -version
 
@@ -82,18 +84,11 @@ jobs:
           python -m pip install "pytest>=8.0"
           pytest -q
 
-      - name: Validate live AMRFinder database
-        shell: bash -el {0}
-        run: |
-          set -euo pipefail
-          amrfinder --database_version
-          amrfinder --list_organisms | grep -Fq "$AMRFINDER_ORGANISM"
-
       - name: AMRFinder nucleotide smoke test
         shell: bash -el {0}
         run: |
           set -euo pipefail
-          curl -fsSL https://raw.githubusercontent.com/ncbi/amr/master/test_dna.fa             -o "$RUNNER_TEMP/test_dna.fa"
+          curl -fsSL https://raw.githubusercontent.com/ncbi/amr/master/test_dna.fa -o "$RUNNER_TEMP/test_dna.fa"
           amrfinder --plus             -n "$RUNNER_TEMP/test_dna.fa"             -O "$AMRFINDER_ORGANISM"             --print_node             -o "$RUNNER_TEMP/amrfinder-smoke.tsv"
           test -s "$RUNNER_TEMP/amrfinder-smoke.tsv"
           head -5 "$RUNNER_TEMP/amrfinder-smoke.tsv"
@@ -108,7 +103,6 @@ jobs:
         shell: bash -el {0}
         run: |
           set -euo pipefail
-          mkdir -p "$TMPDIR"
           nextflow run workflows/public_isolate.nf             --biosample "$BIOSAMPLE"             --amrfinder_organism "$AMRFINDER_ORGANISM"             -with-report nextflow-report.html             -with-trace nextflow-trace.txt             -ansi-log false             -resume
 
       - name: Upload experiment results
