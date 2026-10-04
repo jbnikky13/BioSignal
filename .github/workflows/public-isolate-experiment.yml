@@ -112,9 +112,34 @@ jobs:
 
       - name: Resolve and run isolate workflow
         shell: bash -el {0}
+        env:
+          NCBI_API_KEY: \${{ secrets.NCBI_API_KEY }}
         run: |
-          set -euo pipefail
-          nextflow run workflows/public_isolate.nf             --biosample "$BIOSAMPLE"             --amrfinder_organism "$AMRFINDER_ORGANISM"             -with-report nextflow-report.html             -with-trace nextflow-trace.txt             -ansi-log false             -resume
+          set -uo pipefail
+          nextflow run workflows/public_isolate.nf \
+            --biosample "$BIOSAMPLE" \
+            --amrfinder_organism "$AMRFINDER_ORGANISM" \
+            -with-report nextflow-report.html \
+            -with-trace nextflow-trace.txt \
+            -ansi-log false
+          rc=$?
+          if [ "$rc" -ne 0 ]; then
+            echo "::group::.nextflow.log (tail)"
+            tail -n 160 .nextflow.log || true
+            echo "::endgroup::"
+            while IFS= read -r -d '' f; do
+              echo "::group::$f"
+              cat "$f" || true
+              echo "::endgroup::"
+            done < <(find work -name .command.err -size +0 -print0 2>/dev/null)
+            while IFS= read -r -d '' f; do
+              echo "::group::$f"
+              cat "$f" || true
+              echo "::endgroup::"
+            done < <(find work -name .command.log -size +0 -print0 2>/dev/null)
+          fi
+          exit "$rc"
+
 
       - name: Upload experiment results
         if: always()
@@ -130,3 +155,6 @@ jobs:
             **/tool_versions.txt
             **/assembly_manifest.json
             **/amrfinderplus.log
+            .nextflow.log
+            work/**/.command.err
+            work/**/.command.log
