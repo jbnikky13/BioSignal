@@ -13,6 +13,8 @@ on:
 jobs:
   experiment:
     runs-on: ubuntu-latest
+    env:
+      BIOSAMPLE: ${{ github.event.inputs.biosample || 'SAMN05215988' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -68,7 +70,7 @@ jobs:
         shell: bash -el {0}
         run: |
           nextflow run workflows/public_isolate.nf \
-            --biosample "${{ inputs.biosample }}" \
+            --biosample "${{ env.BIOSAMPLE }}" \
             --amrfinder_organism "Escherichia" \
             -stub-run
 
@@ -79,7 +81,7 @@ jobs:
         run: |
           mkdir -p "$TMPDIR"
           nextflow run workflows/public_isolate.nf \
-            --biosample "${{ inputs.biosample }}" \
+            --biosample "${{ env.BIOSAMPLE }}" \
             --amrfinder_organism "Escherichia" \
             -with-report nextflow-report.html \
             -with-trace nextflow-trace.txt \
@@ -87,7 +89,7 @@ jobs:
       - name: Upload experiment results
         uses: actions/upload-artifact@v4
         with:
-          name: biosignal-${{ inputs.biosample }}-experiment
+          name: biosignal-${{ env.BIOSAMPLE }}-experiment
           path: |
             results/**
             nextflow-report.html
