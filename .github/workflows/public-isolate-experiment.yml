@@ -100,7 +100,11 @@ jobs:
         run: |
           set -euo pipefail
           curl -fsSL https://raw.githubusercontent.com/ncbi/amr/master/test_dna.fa -o "$RUNNER_TEMP/test_dna.fa"
-          amrfinder --plus             -n "$RUNNER_TEMP/test_dna.fa"             -O "$AMRFINDER_ORGANISM"             --print_node             -o "$RUNNER_TEMP/amrfinder-smoke.tsv"
+          amrfinder --plus \
+            -n "$RUNNER_TEMP/test_dna.fa" \
+            -O "$AMRFINDER_ORGANISM" \
+            --print_node \
+            -o "$RUNNER_TEMP/amrfinder-smoke.tsv"
           test -s "$RUNNER_TEMP/amrfinder-smoke.tsv"
           head -5 "$RUNNER_TEMP/amrfinder-smoke.tsv"
 
@@ -108,12 +112,16 @@ jobs:
         shell: bash -el {0}
         run: |
           set -euo pipefail
-          nextflow run workflows/public_isolate.nf             --biosample "$BIOSAMPLE"             --amrfinder_organism "$AMRFINDER_ORGANISM"             -stub-run             -ansi-log false
+          nextflow run workflows/public_isolate.nf \
+            --biosample "$BIOSAMPLE" \
+            --amrfinder_organism "$AMRFINDER_ORGANISM" \
+            -stub-run \
+            -ansi-log false
 
       - name: Resolve and run isolate workflow
         shell: bash -el {0}
         env:
-          NCBI_API_KEY: \${{ secrets.NCBI_API_KEY }}
+          NCBI_API_KEY: ${{ secrets.NCBI_API_KEY }}
         run: |
           set -uo pipefail
           nextflow run workflows/public_isolate.nf \
