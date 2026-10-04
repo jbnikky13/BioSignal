@@ -54,7 +54,7 @@ process AMRFINDERPLUS {
     """
     fasta=\$(find dataset -name '*_genomic.fna' -type f | head -1)
     gff=\$(find dataset -type f -name '*.gff*' | head -1)
-    test -s "\\$fasta"
+    test -s "\$fasta"
 
     amrfinder --database_version > tool_versions.txt 2>&1
 
@@ -68,7 +68,7 @@ process AMRFINDERPLUS {
     set +e
     amrfinder --plus --organism ${params.amrfinder_organism} -n "\$fasta" --print_node \
       > amrfinderplus.tsv 2>> amrfinderplus.log
-    status=$?
+    status=\$?
     set -e
 
     echo "AMRFinder exit status: \$status" >> amrfinderplus.log
