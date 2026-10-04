@@ -1,10 +1,12 @@
 """NCBI Datasets genome lookup by BioSample accession."""
 from dataclasses import dataclass
 import json
+import re
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 BASE_URL = "https://api.ncbi.nlm.nih.gov/datasets/v2"
+BIOSAMPLE_RE = re.compile(r"^SAMN[0-9]+$")
 
 
 @dataclass(frozen=True)
@@ -26,13 +28,26 @@ def _first(value, *keys, default=None):
     return default
 
 
-def find_assemblies_by_biosample(accession: str) -> list[GenomeAssembly]:
-    """Resolve a BioSample accession to NCBI genome assembly reports.
+def _assembly_rank(assembly: GenomeAssembly) -> tuple[int, int, str]:
+    """Prefer more complete and RefSeq-backed assemblies deterministically."""
+    levels = {
+        "complete": 0,
+        "chromosome": 1,
+        "scaffold": 2,
+        "contig": 3,
+    }
+    level = (assembly.assembly_level or "").strip().casefold()
+    completeness = next((rank for name, rank in levels.items() if name in level), 9)
+    refseq_penalty = 0 if assembly.assembly_accession.startswith("GCF_") else 1
+    return completeness, refseq_penalty, assembly.assembly_accession
 
-    NCBI Datasets v2 returns camelCase report fields such as
-    assemblyInfo and assemblyLevel. Parsing also accepts snake_case fields
-    so local fixtures and older responses remain usable.
-    """
+
+def find_assemblies_by_biosample(accession: str) -> list[GenomeAssembly]:
+    """Resolve a BioSample accession to NCBI genome assembly reports."""
+    accession = accession.strip().upper()
+    if not BIOSAMPLE_RE.fullmatch(accession):
+        raise ValueError(f"invalid BioSample accession: {accession!r}")
+
     url = f"{BASE_URL}/genome/biosample/{quote(accession)}/dataset_report"
     request = Request(url, headers={"User-Agent": "BioSignal/0.1 research-client"})
     with urlopen(request, timeout=30) as response:
@@ -80,15 +95,19 @@ def find_assemblies_by_biosample(accession: str) -> list[GenomeAssembly]:
                 if projects and isinstance(projects[0], dict):
                     bioproject_accession = _first(projects[0], "accession")
 
-        assemblies.append(
-            GenomeAssembly(
-                assembly_accession=accession_value or "",
-                assembly_name=assembly_name,
-                assembly_level=assembly_level,
-                organism=organism,
-                biosample_accession=biosample_accession,
-                bioproject_accession=bioproject_accession,
-            )
+        assembly = GenomeAssembly(
+            assembly_accession=accession_value or "",
+            assembly_name=assembly_name,
+            assembly_level=assembly_level,
+            organism=organism,
+            biosample_accession=biosample_accession,
+            bioproject_accession=bioproject_accession,
         )
+        if assembly.biosample_accession and assembly.biosample_accession.upper() != accession:
+            continue
+        assemblies.append(assembly)
 
-    return [a for a in assemblies if a.assembly_accession]
+    return sorted(
+        (a for a in assemblies if a.assembly_accession),
+        key=_assembly_rank,
+    )
