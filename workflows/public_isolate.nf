@@ -54,35 +54,46 @@ process AMRFINDERPLUS {
     path "amrfinderplus.log"
     script:
     """
-    fasta=\$(find dataset -name '*_genomic.fna' -type f | head -1)
-    gff=\$(find dataset -type f -name '*.gff*' | head -1)
+    set -Eeuo pipefail
+
+    fasta=\$(find dataset -name '*_genomic.fna' -type f -print -quit)
+    test -n "\$fasta"
     test -s "\$fasta"
 
-    amrfinder --database_version > tool_versions.txt 2>&1
+    db="\${CONDA_PREFIX}/share/amrfinderplus/data/latest"
+    test -d "\$db"
+    test -f "\$db/fam.tsv"
 
-    # AMRFinderPlus nucleotide-only mode is the correct input mode here.
-    # The downloaded GFF is retained for provenance, but -g is intended to
-    # map protein FASTA identifiers to nucleotide coordinates; this workflow
-    # does not download a protein FASTA.
-    echo "FASTA: \$fasta" > amrfinderplus.log
-    echo "GFF available (not used without protein FASTA): \$gff" >> amrfinderplus.log
+    {
+      echo "AMRFinderPlus version:"
+      amrfinder --database_version
+      echo "Database path: \$db"
+      echo "FASTA: \$fasta"
+    } > tool_versions.txt 2>&1
+
+    {
+      echo "AMRFinderPlus diagnostics"
+      echo "Database: \$db"
+      echo "FASTA: \$fasta"
+      echo "--- command ---"
+      echo "amrfinder --plus -n \$fasta -O ${params.amrfinder_organism} --print_node"
+      echo "--- output ---"
+    } > amrfinderplus.log
 
     set +e
-    amrfinder --plus --organism ${params.amrfinder_organism} -n "\$fasta" --print_node \
-      > amrfinderplus.tsv 2>> amrfinderplus.log
-    status=\$?
+    amrfinder --database "\$db" --plus -n "\$fasta" -O ${params.amrfinder_organism} --print_node \
+      -o amrfinderplus.tsv >> amrfinderplus.log 2>&1
+    status=\?
     set -e
 
     echo "AMRFinder exit status: \$status" >> amrfinderplus.log
     if [ "\$status" -ne 0 ]; then
-      echo "AMRFinderPlus failed. Full diagnostics:" >&2
       cat amrfinderplus.log >&2
       exit "\$status"
     fi
 
-    # A zero-hit screen is still valid; require only a successfully created report.
-    test -f amrfinderplus.tsv
-    printf "AMRFinder report rows (including header): " >> amrfinderplus.log
+    test -s amrfinderplus.tsv
+    printf "AMRFinder report rows: " >> amrfinderplus.log
     wc -l < amrfinderplus.tsv >> amrfinderplus.log
     """
     stub:
@@ -91,6 +102,7 @@ process AMRFINDERPLUS {
     echo "stub" > tool_versions.txt
     echo "stub" > amrfinderplus.log
     """
+}
 }
 
 workflow {
