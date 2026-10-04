@@ -1,5 +1,6 @@
 from unittest.mock import patch
 import json
+import pytest
 
 from biosignal.ncbi_genome import find_assemblies_by_biosample
 
@@ -58,3 +59,43 @@ def test_resolves_public_assembly_from_current_ncbi_shape():
     assert result[0].biosample_accession == "SAMN05215988"
     assert result[0].organism == "Escherichia coli O121"
     assert result[0].bioproject_accession == "PRJNA230969"
+
+
+def test_rejects_invalid_biosample_accession():
+    with pytest.raises(ValueError, match="invalid BioSample"):
+        find_assemblies_by_biosample("not-a-biosample")
+
+
+def test_filters_mismatched_biosample_and_prefers_complete_refseq():
+    payload = {
+        "reports": [
+            {
+                "accession": "GCA_999999.1",
+                "assemblyInfo": {
+                    "assemblyLevel": "contig",
+                    "biosample": {"accession": "SAMN99999999"},
+                },
+            },
+            {
+                "accession": "GCA_100000.1",
+                "assemblyInfo": {
+                    "assemblyLevel": "complete",
+                    "biosample": {"accession": "SAMN05215988"},
+                },
+            },
+            {
+                "accession": "GCF_100000.1",
+                "assemblyInfo": {
+                    "assemblyLevel": "complete",
+                    "biosample": {"accession": "SAMN05215988"},
+                },
+            },
+        ]
+    }
+    with patch("biosignal.ncbi_genome.urlopen", return_value=Response(payload)):
+        result = find_assemblies_by_biosample("SAMN05215988")
+
+    assert [r.assembly_accession for r in result] == [
+        "GCF_100000.1",
+        "GCA_100000.1",
+    ]
