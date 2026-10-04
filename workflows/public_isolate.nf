@@ -29,17 +29,33 @@ process DOWNLOAD_GENOME {
     path "dataset"
     script:
     """
-    assembly=\$(cat ${assembly_accession_file})
+    set -Eeuo pipefail
+    assembly=\$(tr -d '[:space:]' < \${assembly_accession_file})
     test -n "\$assembly"
-    datasets download genome accession "\$assembly" --include genome,gff3 --no-progressbar --filename dataset.zip
+    case "\$assembly" in
+      GCA_[0-9]+\.[0-9]*|GCF_[0-9]+\.[0-9]*) ;;
+      *) echo "Invalid NCBI assembly accession: \$assembly" >&2; exit 1 ;;
+    esac
+    echo "Downloading NCBI assembly: \$assembly"
+    datasets version
+    datasets summary genome accession "\$assembly" --as-json-lines > assembly_summary.jsonl
+    rm -f dataset.zip
+    datasets download genome accession "\$assembly" \
+      --include genome \
+      --no-progressbar \
+      --filename dataset.zip
+    test -s dataset.zip
     mkdir dataset
     unzip -q dataset.zip -d dataset
     test -s dataset/ncbi_dataset/data/assembly_data_report.jsonl
-    test -n "\$(find dataset -name '*_genomic.fna' -type f | head -1)"
+    fasta=\$(find dataset/ncbi_dataset/data -name '*_genomic.fna' -type f -print -quit)
+    test -n "\$fasta"
+    test -s "\$fasta"
+    echo "Resolved FASTA: \$fasta"
     """
     stub:
     """
-    mkdir -p dataset
+    mkdir -p dataset/ncbi_dataset/data
     touch dataset/stub
     """
 }
