@@ -1,10 +1,12 @@
 name: BioSignal public isolate experiment
 
+run-name: "Public isolate — ${{ inputs.biosample || 'manual' }}"
+
 on:
   workflow_dispatch:
     inputs:
       biosample:
-        description: "NCBI BioSample accession"
+        description: "NCBI BioSample accession (example: SAMN05215988)"
         required: true
         default: "SAMN05215988"
         type: string
@@ -18,8 +20,9 @@ concurrency:
 
 jobs:
   experiment:
+    name: "Isolate analysis — ${{ inputs.biosample }}"
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
       BIOSAMPLE: ${{ inputs.biosample }}
       AMRFINDER_ORGANISM: Escherichia
@@ -32,10 +35,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          BIOSAMPLE="${BIOSAMPLE^^}"
           if [[ ! "$BIOSAMPLE" =~ ^SAMN[0-9]+$ ]]; then
-            echo "Invalid BioSample accession: $BIOSAMPLE" >&2
+            echo "::error::Invalid BioSample accession: $BIOSAMPLE"
+            echo "Expected format: SAMN followed by digits, for example SAMN05215988."
             exit 1
           fi
+          echo "Using BioSample: $BIOSAMPLE"
 
       - name: Install NCBI Datasets CLI
         shell: bash
@@ -109,7 +115,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: biosignal-${{ env.BIOSAMPLE }}-experiment
+          name: biosignal-${{ inputs.biosample }}-experiment
           if-no-files-found: warn
           path: |
             results/**
