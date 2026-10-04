@@ -60,20 +60,14 @@ process AMRFINDERPLUS {
     test -n "\$fasta"
     test -s "\$fasta"
 
-    db="\${CONDA_PREFIX}/share/amrfinderplus/data/latest"
-    test -d "\$db"
-    test -f "\$db/fam.tsv"
-
     {
       echo "AMRFinderPlus version:"
       amrfinder --database_version
-      echo "Database path: \$db"
       echo "FASTA: \$fasta"
     } > tool_versions.txt 2>&1
 
     {
       echo "AMRFinderPlus diagnostics"
-      echo "Database: \$db"
       echo "FASTA: \$fasta"
       echo "--- command ---"
       echo "amrfinder --plus -n \$fasta -O ${params.amrfinder_organism} --print_node"
@@ -81,7 +75,7 @@ process AMRFINDERPLUS {
     } > amrfinderplus.log
 
     set +e
-    amrfinder --database "\$db" --plus -n "\$fasta" -O ${params.amrfinder_organism} --print_node \
+    amrfinder --plus -n "\$fasta" -O ${params.amrfinder_organism} --print_node \
       -o amrfinderplus.tsv >> amrfinderplus.log 2>&1
     status=\?
     set -e
