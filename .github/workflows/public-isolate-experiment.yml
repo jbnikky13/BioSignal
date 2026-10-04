@@ -46,7 +46,7 @@ jobs:
             ncbi-amrfinderplus=4.2.7
           amrfinder --version
           amrfinder --database_version
-          amrfinder --list_organisms | grep -Fx "Escherichia"
+          amrfinder --list_organisms | grep -q "Escherichia"
 
       - name: Install Nextflow
         shell: bash -el {0}
