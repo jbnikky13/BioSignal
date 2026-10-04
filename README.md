@@ -135,9 +135,9 @@ NCBI documents BioSample, Assembly, AST phenotype and AMRFinderPlus genotype as 
 BioSignal now includes `workflows/public_isolate.nf`, which connects the real execution stages:
 
 1. Resolve a BioSample to an NCBI assembly.
-2. Download the genome and GFF3 package from NCBI Datasets.
-3. Locate the genomic FASTA.
-4. Run AMRFinderPlus.
+2. Download the genome package from NCBI Datasets, including annotation metadata.
+3. Locate and validate the genomic FASTA.
+4. Run AMRFinderPlus in nucleotide mode.
 5. Capture the AMRFinderPlus version.
 6. Publish the experiment outputs as a GitHub Actions artifact.
 
@@ -154,9 +154,9 @@ The live experiment is hardened to:
 
 - pin AMRFinderPlus software to 4.2.7;
 - initialize and report the AMRFinderPlus database version;
-- retrieve both genomic FASTA and GFF3 from the NCBI genome package;
-- run AMRFinderPlus with nucleotide + GFF evidence and an *Escherichia* organism scope;
-- fail if the expected FASTA, GFF or AMRFinder output is missing;
+- retrieve the genomic FASTA from the NCBI genome package (the package may also contain GFF3 annotation for future combined analyses);
+- run AMRFinderPlus in assembled-nucleotide mode with an *Escherichia* organism scope;
+- fail if the expected FASTA or AMRFinder output is missing;
 - publish the assembly manifest, AMRFinder output, tool-version record and Nextflow execution reports as artifacts.
 
 NCBI documents that AMRFinderPlus accepts assembled nucleotide sequence and can use GFF annotation, and NCBI's own CI examples exercise combined nucleotide/protein/GFF modes with organism-specific mutation screening. citeturn0search0turn4search0
@@ -167,3 +167,10 @@ NCBI documents that AMRFinderPlus accepts assembled nucleotide sequence and can 
 The validation workflow uses Nextflow **stub mode** with explicit `stub:` blocks for every process. This prevents CI validation from contacting NCBI or depending on live external data. The live experiment remains a separate manually dispatched workflow.
 
 The default live validation sample is now `SAMN05215988`, an *Escherichia coli* BioSample associated with a public GenBank assembly (GCA_012849755.1), rather than `SAMN05170351`. NCBI documents that many Pathogen Detection isolates have assemblies that exist only inside the Pathogen Detection system and are not yet deposited in GenBank; those cannot be downloaded through the standard `datasets download genome accession` path. citeturn5search5turn7search0
+
+
+### Pipeline audit hardening
+
+The public-isolate path now validates BioSample accession syntax, filters assembly records that explicitly belong to a different BioSample, and selects an assembly deterministically (complete/chromosome/scaffold/contig, then RefSeq GCF over GenBank GCA). The live workflow also compiles the Nextflow graph in stub mode before contacting the live NCBI dataset.
+
+AMRFinderPlus is intentionally run in nucleotide mode here. In AMRFinderPlus, a GFF file is not an additional input to nucleotide-only mode; GFF is used with protein input for coordinate-aware combined analysis. The repository therefore keeps GFF parsing as a separate capability rather than passing an invalid `-n + -g` combination to the nucleotide-only execution path. 
