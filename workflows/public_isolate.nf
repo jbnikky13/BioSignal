@@ -30,7 +30,7 @@ process DOWNLOAD_GENOME {
     script:
     """
     set -Eeuo pipefail
-    assembly=\$(tr -d '[:space:]' < \${assembly_accession_file})
+    assembly=\$(tr -d '[:space:]' < ${assembly_accession_file})
     test -n "\$assembly"
     case "\$assembly" in
       GCA_[0-9]+\.[0-9]*|GCF_[0-9]+\.[0-9]*) ;;
