@@ -45,6 +45,7 @@ jobs:
             -c bioconda \
             ncbi-amrfinderplus=4.2.7
           amrfinder --version
+          amrfinder -u
           amrfinder --database_version
           amrfinder --list_organisms | grep -q "Escherichia"
 
@@ -65,7 +66,9 @@ jobs:
       - name: Validate live AMRFinder database
         shell: bash -el {0}
         run: |
+          set -euo pipefail
           amrfinder --database_version
+          amrfinder --list_organisms | grep -Fq "Escherichia"
 
       - name: AMRFinder nucleotide smoke test
         shell: bash -el {0}
