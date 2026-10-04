@@ -7,6 +7,7 @@ on:
         description: "NCBI BioSample accession"
         required: true
         default: "SAMN05215988"
+        type: string
 
 permissions:
   contents: read
@@ -18,21 +19,28 @@ concurrency:
 jobs:
   experiment:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
-      BIOSAMPLE: ${{ github.event.inputs.biosample || 'SAMN05215988' }}
+      BIOSAMPLE: ${{ inputs.biosample }}
       TMPDIR: ${{ runner.temp }}/amrfinder-tmp
+      AMRFINDER_ORGANISM: Escherichia
     steps:
       - uses: actions/checkout@v4
 
       - name: Validate BioSample input
-        shell: bash -el {0}
+        shell: bash
         run: |
           set -euo pipefail
-          [[ "$BIOSAMPLE" =~ ^SAMN[0-9]+$ ]]
+          [[ "$BIOSAMPLE" =~ ^SAMN[0-9]+$ ]] || {
+            echo "Invalid BioSample accession: $BIOSAMPLE" >&2
+            exit 1
+          }
 
       - name: Install NCBI Datasets CLI
+        shell: bash
         run: |
-          curl -L https://ftp.ncbi.nlm.nih.gov/pub/datasets/command-line/v2/linux-amd64/datasets             -o datasets
+          set -euo pipefail
+          curl -fsSL https://ftp.ncbi.nlm.nih.gov/pub/datasets/command-line/v2/linux-amd64/datasets             -o datasets
           chmod +x datasets
           sudo mv datasets /usr/local/bin/datasets
           datasets version
@@ -50,26 +58,26 @@ jobs:
       - name: Install AMRFinderPlus
         shell: bash -el {0}
         run: |
-          micromamba install -y \
-            --strict-channel-priority \
-            -c conda-forge \
-            -c bioconda \
-            ncbi-amrfinderplus=4.2.7
+          set -euo pipefail
+          micromamba install -y             --strict-channel-priority             -c conda-forge             -c bioconda             ncbi-amrfinderplus=4.2.7
           amrfinder --version
           amrfinder -u
           amrfinder --database_version
-          amrfinder --list_organisms | grep -q "Escherichia"
+          amrfinder --list_organisms | grep -Fq "$AMRFINDER_ORGANISM"
 
       - name: Install Nextflow
         shell: bash -el {0}
         run: |
-          curl -s https://get.nextflow.io | bash
+          set -euo pipefail
+          curl -fsSL https://get.nextflow.io | bash
           sudo mv nextflow /usr/local/bin/nextflow
           nextflow -version
 
-      - name: Install and run Python tests
+      - name: Install package and run tests
         shell: bash -el {0}
         run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
           python -m pip install .
           python -m pip install "pytest>=8.0"
           pytest -q
@@ -79,31 +87,36 @@ jobs:
         run: |
           set -euo pipefail
           amrfinder --database_version
-          amrfinder --list_organisms | grep -Fq "Escherichia"
+          amrfinder --list_organisms | grep -Fq "$AMRFINDER_ORGANISM"
 
       - name: AMRFinder nucleotide smoke test
         shell: bash -el {0}
         run: |
           set -euo pipefail
-          curl -fsSL https://raw.githubusercontent.com/ncbi/amr/master/test_dna.fa -o "$RUNNER_TEMP/test_dna.fa"
-          amrfinder --plus -n "$RUNNER_TEMP/test_dna.fa" -O Escherichia --print_node -o "$RUNNER_TEMP/amrfinder-smoke.tsv"
+          curl -fsSL https://raw.githubusercontent.com/ncbi/amr/master/test_dna.fa             -o "$RUNNER_TEMP/test_dna.fa"
+          amrfinder --plus             -n "$RUNNER_TEMP/test_dna.fa"             -O "$AMRFINDER_ORGANISM"             --print_node             -o "$RUNNER_TEMP/amrfinder-smoke.tsv"
           test -s "$RUNNER_TEMP/amrfinder-smoke.tsv"
           head -5 "$RUNNER_TEMP/amrfinder-smoke.tsv"
+
+      - name: Compile workflow in stub mode
+        shell: bash -el {0}
+        run: |
+          set -euo pipefail
+          nextflow run workflows/public_isolate.nf             --biosample "$BIOSAMPLE"             --amrfinder_organism "$AMRFINDER_ORGANISM"             -stub-run             -ansi-log false
 
       - name: Resolve and run isolate workflow
         shell: bash -el {0}
         run: |
+          set -euo pipefail
           mkdir -p "$TMPDIR"
-          nextflow run workflows/public_isolate.nf \
-            --biosample "${{ env.BIOSAMPLE }}" \
-            --amrfinder_organism "Escherichia" \
-            -with-report nextflow-report.html \
-            -with-trace nextflow-trace.txt \
-            -resume
+          nextflow run workflows/public_isolate.nf             --biosample "$BIOSAMPLE"             --amrfinder_organism "$AMRFINDER_ORGANISM"             -with-report nextflow-report.html             -with-trace nextflow-trace.txt             -ansi-log false             -resume
+
       - name: Upload experiment results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: biosignal-${{ env.BIOSAMPLE }}-experiment
+          if-no-files-found: warn
           path: |
             results/**
             nextflow-report.html
