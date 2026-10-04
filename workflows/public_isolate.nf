@@ -55,37 +55,31 @@ process AMRFINDERPLUS {
     script:
     """
     set -Eeuo pipefail
-
+    if [ -n "\${MAMBA_ROOT_PREFIX:-}" ] && [ -d "\$MAMBA_ROOT_PREFIX/envs/biosignal/bin" ]; then
+      export PATH="\$MAMBA_ROOT_PREFIX/envs/biosignal/bin:\$PATH"
+    fi
+    command -v amrfinder
+    amrfinder --version
+    amrfinder --database_version
     fasta=\$(find dataset -name '*_genomic.fna' -type f -print -quit)
     test -n "\$fasta"
     test -s "\$fasta"
-
-    {
-      echo "AMRFinderPlus version:"
-      amrfinder --database_version
-      echo "FASTA: \$fasta"
-    } > tool_versions.txt 2>&1
-
     {
       echo "AMRFinderPlus diagnostics"
+      echo "Executable: \$(command -v amrfinder)"
+      amrfinder --version
+      amrfinder --database_version
       echo "FASTA: \$fasta"
       echo "--- command ---"
-      echo "amrfinder --plus -n \$fasta -O ${params.amrfinder_organism} --print_node"
+      echo "amrfinder --plus -n \$fasta -O \${params.amrfinder_organism} --print_node"
       echo "--- output ---"
-    } > amrfinderplus.log
-
+    } > amrfinderplus.log 2>&1
     set +e
-    amrfinder --plus -n "\$fasta" -O ${params.amrfinder_organism} --print_node \
-      -o amrfinderplus.tsv >> amrfinderplus.log 2>&1
+    amrfinder --plus -n "\$fasta" -O \${params.amrfinder_organism} --print_node -o amrfinderplus.tsv >> amrfinderplus.log 2>&1
     status=\$?
     set -e
-
     echo "AMRFinder exit status: \$status" >> amrfinderplus.log
-    if [ "\$status" -ne 0 ]; then
-      cat amrfinderplus.log >&2
-      exit "\$status"
-    fi
-
+    if [ "\$status" -ne 0 ]; then cat amrfinderplus.log >&2; exit "\$status"; fi
     test -s amrfinderplus.tsv
     printf "AMRFinder report rows: " >> amrfinderplus.log
     wc -l < amrfinderplus.tsv >> amrfinderplus.log
