@@ -12,12 +12,12 @@ process RESOLVE_ASSEMBLY {
     tuple path("assembly_manifest.json"), path("assembly_accession.txt")
     script:
     """
-    python -m biosignal.resolve_assembly "\${biosample}" --output assembly_manifest.json
+    python -m biosignal.resolve_assembly "${biosample}" --output assembly_manifest.json
     python -c 'import json; print(json.load(open("assembly_manifest.json", encoding="utf-8"))["assembly_accession"])' > assembly_accession.txt
     """
     stub:
     """
-    echo '{"biosample_accession":"\${biosample}","assembly_accession":"GCA_STUB.1"}' > assembly_manifest.json
+    echo '{"biosample_accession":"${biosample}","assembly_accession":"GCA_STUB.1"}' > assembly_manifest.json
     echo "GCA_STUB.1" > assembly_accession.txt
     """
 }
