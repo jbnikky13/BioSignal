@@ -6,16 +6,18 @@ params.outdir = "results"
 
 process RESOLVE_ASSEMBLY {
     publishDir params.outdir, mode: "copy", overwrite: true
+    input:
+    val biosample
     output:
     tuple path("assembly_manifest.json"), path("assembly_accession.txt")
     script:
     """
-    python -m biosignal.resolve_assembly ${params.biosample} --output assembly_manifest.json
+    python -m biosignal.resolve_assembly "\${biosample}" --output assembly_manifest.json
     python -c 'import json; print(json.load(open("assembly_manifest.json", encoding="utf-8"))["assembly_accession"])' > assembly_accession.txt
     """
     stub:
     """
-    echo '{"biosample_accession":"${params.biosample}","assembly_accession":"GCA_STUB.1"}' > assembly_manifest.json
+    echo '{"biosample_accession":"\${biosample}","assembly_accession":"GCA_STUB.1"}' > assembly_manifest.json
     echo "GCA_STUB.1" > assembly_accession.txt
     """
 }
@@ -92,7 +94,7 @@ process AMRFINDERPLUS {
 }
 
 workflow {
-    assembly = RESOLVE_ASSEMBLY()
+    assembly = RESOLVE_ASSEMBLY(params.biosample)
     genome = DOWNLOAD_GENOME(assembly)
     AMRFINDERPLUS(genome)
 }
