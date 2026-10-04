@@ -21,28 +21,37 @@ class AssemblyManifest:
 def write_manifest(manifest: AssemblyManifest, output: str | Path) -> Path:
     path = Path(output)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps({
-        "biosample_accession": manifest.biosample_accession,
-        "assembly_accession": manifest.assembly_accession,
-        "organism": manifest.organism,
-        "assembly_level": manifest.assembly_level,
-        "source": manifest.source,
-    }, indent=2) + "
-", encoding="utf-8")
+    path.write_text(
+        json.dumps(
+            {
+                "biosample_accession": manifest.biosample_accession,
+                "assembly_accession": manifest.assembly_accession,
+                "organism": manifest.organism,
+                "assembly_level": manifest.assembly_level,
+                "source": manifest.source,
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     return path
 
 
 def build_manifest_from_assembly(assembly, biosample_accession: str) -> AssemblyManifest:
-    if not biosample_accession.strip():
+    accession = biosample_accession.strip().upper()
+    if not accession:
         raise ValueError("BioSample accession is required")
-    if not assembly.assembly_accession:
+    if not getattr(assembly, "assembly_accession", None):
         raise ValueError("assembly accession is required")
+
     assembly_biosample = getattr(assembly, "biosample_accession", None)
-    if assembly_biosample and assembly_biosample.upper() != biosample_accession.strip().upper():
+    if assembly_biosample and assembly_biosample.upper() != accession:
         raise ValueError("assembly does not belong to requested BioSample")
+
     return AssemblyManifest(
-        biosample_accession=biosample_accession.strip().upper(),
+        biosample_accession=accession,
         assembly_accession=assembly.assembly_accession,
-        organism=assembly.organism,
-        assembly_level=assembly.assembly_level,
+        organism=getattr(assembly, "organism", None),
+        assembly_level=getattr(assembly, "assembly_level", None),
     )
