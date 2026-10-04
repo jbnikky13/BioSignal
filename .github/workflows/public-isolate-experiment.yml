@@ -1,14 +1,19 @@
 name: BioSignal public isolate experiment
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       biosample:
         description: "NCBI BioSample accession"
         required: true
         default: "SAMN05215988"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: biosignal-public-isolate
+  cancel-in-progress: true
 
 jobs:
   experiment:
@@ -18,6 +23,12 @@ jobs:
       TMPDIR: ${{ runner.temp }}/amrfinder-tmp
     steps:
       - uses: actions/checkout@v4
+
+      - name: Validate BioSample input
+        shell: bash -el {0}
+        run: |
+          set -euo pipefail
+          [[ "$BIOSAMPLE" =~ ^SAMN[0-9]+$ ]]
 
       - name: Install NCBI Datasets CLI
         run: |
@@ -79,14 +90,6 @@ jobs:
           test -s "$RUNNER_TEMP/amrfinder-smoke.tsv"
           head -5 "$RUNNER_TEMP/amrfinder-smoke.tsv"
 
-      - name: Compile Nextflow workflow (stub)
-        shell: bash -el {0}
-        run: |
-          nextflow run workflows/public_isolate.nf \
-            --biosample "${{ env.BIOSAMPLE }}" \
-            --amrfinder_organism "Escherichia" \
-            -stub-run
-
       - name: Resolve and run isolate workflow
         shell: bash -el {0}
         run: |
@@ -108,3 +111,4 @@ jobs:
             **/amrfinderplus.tsv
             **/tool_versions.txt
             **/assembly_manifest.json
+            **/amrfinderplus.log
