@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BIOSAMPLE: ${{ github.event.inputs.biosample || 'SAMN05215988' }}
+      TMPDIR: ${{ runner.temp }}/amrfinder-tmp
     steps:
       - uses: actions/checkout@v4
 
@@ -44,8 +45,8 @@ jobs:
             -c bioconda \
             ncbi-amrfinderplus=4.2.7
           amrfinder --version
-          amrfinder --database_version || true
-          amrfinder -u
+          amrfinder --database_version
+          amrfinder --list_organisms | grep -Fx "Escherichia"
 
       - name: Install Nextflow
         shell: bash -el {0}
@@ -66,6 +67,15 @@ jobs:
         run: |
           amrfinder --database_version
 
+      - name: AMRFinder nucleotide smoke test
+        shell: bash -el {0}
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/ncbi/amr/master/test_dna.fa -o "$RUNNER_TEMP/test_dna.fa"
+          amrfinder --plus -n "$RUNNER_TEMP/test_dna.fa" -O Escherichia --print_node -o "$RUNNER_TEMP/amrfinder-smoke.tsv"
+          test -s "$RUNNER_TEMP/amrfinder-smoke.tsv"
+          head -5 "$RUNNER_TEMP/amrfinder-smoke.tsv"
+
       - name: Compile Nextflow workflow (stub)
         shell: bash -el {0}
         run: |
@@ -76,8 +86,6 @@ jobs:
 
       - name: Resolve and run isolate workflow
         shell: bash -el {0}
-        env:
-          TMPDIR: ${{ runner.temp }}/amrfinder-tmp
         run: |
           mkdir -p "$TMPDIR"
           nextflow run workflows/public_isolate.nf \
