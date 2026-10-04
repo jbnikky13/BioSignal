@@ -58,24 +58,30 @@ process AMRFINDERPLUS {
 
     amrfinder --database_version > tool_versions.txt 2>&1
 
-    # AMRFinderPlus reliably supports assembly-level nucleotide screening.
-    # Use the NCBI GFF only as an optional annotation input; a malformed or
-    # incompatible GFF must not prevent the core AMR screen from running.
-    if [ -n "\$gff" ] && [ -s "\$gff" ]; then
-      echo "FASTA: \$fasta" > amrfinderplus.log
-      echo "GFF: \$gff" >> amrfinderplus.log
-      amrfinder --plus --organism ${params.amrfinder_organism} -n "\$fasta" -g "\$gff" --print_node -o amrfinderplus.tsv >> amrfinderplus.log 2>&1
-      status=\$?
-      if [ "\$status" -ne 0 ]; then
-        echo "Combined nucleotide+GFF AMRFinder run failed (exit \$status); retrying with nucleotide-only screening." >> amrfinderplus.log
-        amrfinder --plus --organism ${params.amrfinder_organism} -n "\$fasta" --print_node -o amrfinderplus.tsv >> amrfinderplus.log 2>&1
-      fi
-    else
-      echo "No usable GFF found; running nucleotide-only AMRFinder screening." > amrfinderplus.log
-      amrfinder --plus --organism ${params.amrfinder_organism} -n "\$fasta" --print_node -o amrfinderplus.tsv >> amrfinderplus.log 2>&1
+    # AMRFinderPlus nucleotide-only mode is the correct input mode here.
+    # The downloaded GFF is retained for provenance, but -g is intended to
+    # map protein FASTA identifiers to nucleotide coordinates; this workflow
+    # does not download a protein FASTA.
+    echo "FASTA: $fasta" > amrfinderplus.log
+    echo "GFF available (not used without protein FASTA): $gff" >> amrfinderplus.log
+
+    set +e
+    amrfinder --plus --organism ${params.amrfinder_organism} -n "$fasta" --print_node \
+      > amrfinderplus.tsv 2>> amrfinderplus.log
+    status=$?
+    set -e
+
+    echo "AMRFinder exit status: $status" >> amrfinderplus.log
+    if [ "$status" -ne 0 ]; then
+      echo "AMRFinderPlus failed. Full diagnostics:" >&2
+      cat amrfinderplus.log >&2
+      exit "$status"
     fi
 
-    test -s amrfinderplus.tsv
+    # A zero-hit screen is still valid; require only a successfully created report.
+    test -f amrfinderplus.tsv
+    printf "AMRFinder report rows (including header): " >> amrfinderplus.log
+    wc -l < amrfinderplus.tsv >> amrfinderplus.log
     """
     stub:
     """
