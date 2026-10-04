@@ -77,7 +77,7 @@ process AMRFINDERPLUS {
     set +e
     amrfinder --plus -n "\$fasta" -O ${params.amrfinder_organism} --print_node \
       -o amrfinderplus.tsv >> amrfinderplus.log 2>&1
-    status=\?
+    status=\\$?
     set -e
 
     echo "AMRFinder exit status: \$status" >> amrfinderplus.log
@@ -96,7 +96,6 @@ process AMRFINDERPLUS {
     echo "stub" > tool_versions.txt
     echo "stub" > amrfinderplus.log
     """
-}
 }
 
 workflow {
