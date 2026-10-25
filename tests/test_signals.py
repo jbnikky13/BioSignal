@@ -43,6 +43,7 @@ def test_detects_rising_resistance_and_reports_both_sample_sizes():
     assert signal.change == 0.15
     assert signal.previous_sample_count == 100
     assert "increased" in signal.explanation
+    assert "15.0 percentage points" in signal.explanation
     assert "n=100" in signal.explanation
     assert signal.quality_notes == ()
     assert signal.comparison_status == "no_known_mismatch"
@@ -160,3 +161,64 @@ def test_changed_comparability_metadata_is_flagged():
     assert any("testing criteria" in note for note in signal.quality_notes)
     assert any("laboratory method" in note for note in signal.quality_notes)
     assert signal.comparison_status == "caution"
+
+
+
+def test_case_and_whitespace_only_metadata_differences_are_not_mismatches():
+    previous = observation(
+        20,
+        period_start=date(2025, 10, 1),
+        period_end=date(2025, 12, 31),
+        region=" North ",
+        source=" Public Lab ",
+        specimen_type="Urine",
+        testing_criteria="EUCAST 2025",
+        laboratory_method="Disk Diffusion",
+    )
+    current = observation(
+        35,
+        region="north",
+        source="public lab",
+        specimen_type=" urine ",
+        testing_criteria="eucast 2025",
+        laboratory_method="disk diffusion",
+    )
+
+    signal = detect_amr_signal(current, previous)
+
+    assert signal.region == "north"
+    assert signal.quality_notes == ()
+    assert signal.comparison_status == "no_known_mismatch"
+
+
+def test_small_previous_sample_does_not_trigger_trend_watch():
+    previous = observation(
+        0,
+        tested=5,
+        period_start=date(2025, 10, 1),
+        period_end=date(2025, 12, 31),
+    )
+    current = observation(15, tested=100)
+
+    signal = detect_amr_signal(current, previous, minimum_samples=20)
+
+    assert signal.change == 0.15
+    assert signal.severity == "baseline"
+    assert signal.previous_sample_count == 5
+    assert any("below the configured minimum" in note for note in signal.quality_notes)
+    assert "not used to trigger a watch alert" in signal.explanation
+
+
+def test_alert_change_is_absolute_percentage_points():
+    previous = observation(
+        20,
+        period_start=date(2025, 10, 1),
+        period_end=date(2025, 12, 31),
+    )
+    current = observation(30)
+
+    signal = detect_amr_signal(current, previous, alert_rate=0.50, alert_change=0.10)
+
+    assert signal.change == 0.10
+    assert signal.severity == "watch"
+    assert "10.0 percentage points" in signal.explanation
