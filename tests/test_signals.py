@@ -14,6 +14,9 @@ def observation(
     period_end: date = date(2026, 3, 31),
     region: str | None = "example-region",
     source: str | None = "synthetic",
+    specimen_type: str | None = "urine",
+    testing_criteria: str | None = "EUCAST 2025",
+    laboratory_method: str | None = "disk diffusion",
 ) -> AMRObservation:
     return AMRObservation(
         organism="Escherichia coli",
@@ -24,6 +27,9 @@ def observation(
         resistant_count=resistant,
         region=region,
         source=source,
+        specimen_type=specimen_type,
+        testing_criteria=testing_criteria,
+        laboratory_method=laboratory_method,
     )
 
 
@@ -123,3 +129,34 @@ def test_missing_coverage_metadata_is_explicitly_flagged():
 def test_rejects_invalid_signal_thresholds(kwargs, message):
     with pytest.raises(ValueError, match=message):
         detect_amr_signal(observation(5), **kwargs)
+
+
+
+def test_missing_comparability_metadata_is_flagged():
+    signal = detect_amr_signal(
+        observation(25, specimen_type=None, testing_criteria=None, laboratory_method=None)
+    )
+
+    assert any("specimen type" in note for note in signal.quality_notes)
+    assert any("testing criteria" in note for note in signal.quality_notes)
+    assert any("laboratory method" in note for note in signal.quality_notes)
+    assert signal.comparison_status == "not_assessed"
+
+
+def test_changed_comparability_metadata_is_flagged():
+    previous = observation(
+        20,
+        period_start=date(2025, 10, 1),
+        period_end=date(2025, 12, 31),
+        specimen_type="blood",
+        testing_criteria="CLSI 2024",
+        laboratory_method="broth microdilution",
+    )
+    current = observation(35)
+
+    signal = detect_amr_signal(current, previous)
+
+    assert any("specimen type" in note for note in signal.quality_notes)
+    assert any("testing criteria" in note for note in signal.quality_notes)
+    assert any("laboratory method" in note for note in signal.quality_notes)
+    assert signal.comparison_status == "caution"
