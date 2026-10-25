@@ -12,6 +12,8 @@ def observation(
     *,
     period_start: date = date(2026, 1, 1),
     period_end: date = date(2026, 3, 31),
+    region: str | None = "example-region",
+    source: str | None = "synthetic",
 ) -> AMRObservation:
     return AMRObservation(
         organism="Escherichia coli",
@@ -20,8 +22,8 @@ def observation(
         period_end=period_end,
         tested_count=tested,
         resistant_count=resistant,
-        region="example-region",
-        source="synthetic",
+        region=region,
+        source=source,
     )
 
 
@@ -72,6 +74,34 @@ def test_overlapping_periods_are_explicitly_flagged():
     assert len(signal.quality_notes) == 1
     assert "overlap" in signal.quality_notes[0]
     assert "overlap" in signal.explanation
+
+
+def test_source_change_is_flagged_as_possible_surveillance_coverage_shift():
+    previous = observation(20, period_start=date(2025, 10, 1), period_end=date(2025, 12, 31), source="lab-A")
+    current = observation(35, source="lab-B")
+
+    signal = detect_amr_signal(current, previous)
+
+    assert signal.severity == "watch"
+    assert any("Source changed" in note for note in signal.quality_notes)
+    assert "surveillance coverage" in signal.explanation
+
+
+def test_region_change_is_flagged_when_comparing_observations_directly():
+    previous = observation(20, period_start=date(2025, 10, 1), period_end=date(2025, 12, 31), region="north")
+    current = observation(35, region="south")
+
+    signal = detect_amr_signal(current, previous)
+
+    assert any("Region changed" in note for note in signal.quality_notes)
+    assert "geographic coverage" in signal.explanation
+
+
+def test_missing_coverage_metadata_is_explicitly_flagged():
+    signal = detect_amr_signal(observation(25, region=None, source=None))
+
+    assert any("missing region or source" in note for note in signal.quality_notes)
+    assert "cannot be fully assessed" in signal.explanation
 
 
 @pytest.mark.parametrize(
