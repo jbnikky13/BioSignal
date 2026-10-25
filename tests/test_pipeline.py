@@ -47,14 +47,21 @@ def test_pipeline_sorts_unsorted_periods_chronologically():
     assert signals[1].change == 0.15
 
 
-def test_pipeline_does_not_compare_across_regions_or_organisms():
+def test_pipeline_keeps_region_series_separate_instead_of_cross_comparing():
     signals = run([
         obs(date(2026, 1, 1), 20, region="north"),
         obs(date(2026, 4, 1), 35, region="south"),
         obs(date(2026, 4, 1), 40, organism="Klebsiella pneumoniae", region="north"),
     ])
 
+    # Each region/organism has only one observation. The pipeline deliberately
+    # does not pair north with south; each signal starts a separate series.
     assert all(signal.previous_rate is None for signal in signals)
+    assert all(signal.comparison_status == "not_assessed" for signal in signals)
+    assert all(
+        not any("Region changed" in note for note in signal.quality_notes)
+        for signal in signals
+    )
 
 
 def test_pipeline_groups_case_and_whitespace_variants_consistently():
