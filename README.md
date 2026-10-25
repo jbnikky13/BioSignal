@@ -211,3 +211,10 @@ The quality assessment exposes `data_quality_score` and `data_quality_label`. Th
 The rate thresholds and data-quality score are uncalibrated research heuristics. Signals now include Wilson 95% intervals for the current and previous resistance proportions; these describe binomial sampling uncertainty only and do not prove representativeness, comparability, or a statistically significant change. They are not confidence scores for the signal, and no probability of an alert being correct is produced. The intervals are not an interval for the between-period difference.
 
 Genuine calibration and out-of-sample validation require representative, outcome-labelled surveillance data and a pre-specified independent holdout. Synthetic tests cannot establish scientific validity. See [the scientific validation plan](docs/scientific-validation-plan.md) for data requirements, an evaluation protocol, uncertainty limits, and the release gate. Until that work is completed, do not describe watch signals as validated epidemiological alerts or use them alone for clinical or public-health decisions.
+
+
+## Scientific calibration and out-of-sample validation
+
+BioSignal now has a leakage-aware evaluation harness in `src/biosignal/calibration.py`. It validates independent reference-label provenance, splits records chronologically, selects thresholds on development records only, evaluates frozen thresholds on an untouched holdout, reports operating metrics with denominators and Wilson intervals, and supports AUROC to assess the heuristic data-quality score against independent expert labels.
+
+Start with the empty [calibration CSV schema](data/examples/calibration_template.csv) and read the [scientific validation plan](docs/scientific-validation-plan.md). The template intentionally contains no invented outcomes. Candidate sources include WHO GLASS and ECDC EARS-Net; dataset-specific coverage, denominators, sampling, and comparability must be checked before use. No external cohort has been ingested or scientifically evaluated yet, so no calibration or out-of-sample performance claim is made.
