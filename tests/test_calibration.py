@@ -7,6 +7,7 @@ from biosignal.calibration import (
     binary_metrics,
     chronological_split,
     evaluate_holdout,
+    external_unit_split,
     predict_alert,
     roc_auc,
     select_thresholds,
@@ -112,3 +113,21 @@ def test_quality_score_auc_measures_discrimination_not_probability_calibration()
 def test_quality_score_auc_requires_both_reference_classes():
     with pytest.raises(ValueError, match="both positive and negative"):
         roc_auc([1, 1], [0.2, 0.8])
+
+
+
+def test_external_unit_split_keeps_surveillance_units_disjoint():
+    records = [
+        row("2023-01-01", 0, 0.05, 0.04, unit="site-A"),
+        row("2023-02-01", 1, 0.45, 0.10, unit="site-B"),
+        row("2023-03-01", 0, 0.08, 0.05, unit="site-C"),
+    ]
+    train, test = external_unit_split(records, holdout_units={"site-B"})
+    assert {r["surveillance_unit"] for r in train} == {"site-A", "site-C"}
+    assert {r["surveillance_unit"] for r in test} == {"site-B"}
+
+
+def test_external_unit_split_rejects_missing_partition():
+    records = [row("2023-01-01", 0, 0.05, 0.04, unit="site-A")]
+    with pytest.raises(ValueError, match="non-empty development and holdout"):
+        external_unit_split(records, holdout_units={"site-A"})
