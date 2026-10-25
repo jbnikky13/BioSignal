@@ -188,4 +188,12 @@ Each generated signal now includes a `comparison_status` field describing what t
 
 ### AMR observation comparability safeguards
 
-The canonical aggregated-observation CSV schema accepts optional `specimen_type`, `testing_criteria`, and `laboratory_method` columns. The source-normalization helper accepts corresponding `SPECIMEN_TYPE`, `TESTING_CRITERIA`, and `LABORATORY_METHOD` fields by default, with column names configurable for source-specific exports. Existing inputs remain valid when these fields are absent; missing values remain unknown and are not inferred. Signal comparisons warn when these fields are missing or populated values differ. These checks only cover metadata supplied by the source and do not establish full epidemiological comparability. Population mix, testing indications, laboratory implementation, and other unrecorded factors may still differ.
+The canonical aggregated-observation CSV schema accepts optional `specimen_type`, `testing_criteria`, and `laboratory_method` columns. The source-normalization helper accepts corresponding `SPECIMEN_TYPE`, `TESTING_CRITERIA`, and `LABORATORY_METHOD` fields by default, with column names configurable for source-specific exports. Existing inputs remain valid when these fields are absent; missing values remain unknown and are not inferred. Signal comparisons warn when these fields are missing or populated values differ after case-insensitive, surrounding-whitespace normalization; original labels are preserved for display. Region and source mismatch checks use the same normalization. These checks only cover metadata supplied by the source and do not establish full epidemiological comparability. Population mix, testing indications, laboratory implementation, and other unrecorded factors may still differ.
+
+
+
+### Alert threshold units and sample-size safeguards
+
+The `alert_change` parameter is an absolute difference between resistance proportions: `0.10` means a 10-percentage-point increase (for example, 20% to 30%), not a 10% relative increase. Trend explanations report absolute changes in percentage points. The default threshold remains a configurable research heuristic, not a validated epidemiological threshold.
+
+The minimum-sample safeguard applies to both periods when deciding whether a period-to-period change can trigger a `watch` alert. If the previous observation is below the configured minimum, BioSignal retains the descriptive rate difference but adds a caveat and does not use that change alone to trigger a watch. The current-period sample-size rule remains separate. These simple safeguards do not replace statistical uncertainty estimates or surveillance-design review.
