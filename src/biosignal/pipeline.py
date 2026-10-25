@@ -17,16 +17,27 @@ def compare_periods(
 def run(
     observations: Iterable[AMRObservation],
 ) -> list[AMRSignal]:
-    """Pair sequential observations for each organism/drug/region.
+    """Pair chronological observations within each organism/drug/region.
 
-    Input should already be sorted by organism, antimicrobial, region,
-    and period_start.
+    Inputs are sorted internally so callers cannot accidentally compare
+    periods in arrival order. Ties are stable; duplicate or overlapping
+    periods remain visible to the caller and are not silently discarded.
     """
+    ordered = sorted(
+        observations,
+        key=lambda item: (
+            item.organism.casefold(),
+            item.antimicrobial.casefold(),
+            (item.region or "").casefold(),
+            item.period_start,
+            item.period_end,
+        ),
+    )
     signals: list[AMRSignal] = []
     previous: AMRObservation | None = None
     previous_key: tuple[str, str, str | None] | None = None
 
-    for current in observations:
+    for current in ordered:
         key = (current.organism, current.antimicrobial, current.region)
         if key != previous_key:
             previous = None
