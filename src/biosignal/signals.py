@@ -57,7 +57,41 @@ def detect_amr_signal(
             "surveillance coverage cannot be fully assessed."
         )
 
+    comparability_fields = (
+        ("specimen_type", "specimen type"),
+        ("testing_criteria", "testing criteria"),
+        ("laboratory_method", "laboratory method"),
+    )
+    missing_current = [
+        label for field, label in comparability_fields
+        if not getattr(current, field)
+    ]
+    if missing_current:
+        quality_notes.append(
+            "Current observation is missing comparability metadata: "
+            + ", ".join(missing_current) + "."
+        )
+
     if previous is not None:
+        changed_fields = [
+            label for field, label in comparability_fields
+            if getattr(current, field) and getattr(previous, field)
+            and getattr(current, field) != getattr(previous, field)
+        ]
+        missing_previous = [
+            label for field, label in comparability_fields
+            if not getattr(previous, field)
+        ]
+        if changed_fields:
+            quality_notes.append(
+                "Comparability metadata changed for: "
+                + ", ".join(changed_fields) + "."
+            )
+        if missing_previous:
+            quality_notes.append(
+                "Previous observation is missing comparability metadata: "
+                + ", ".join(missing_previous) + "."
+            )
         if current.period_start <= previous.period_end:
             quality_notes.append(
                 "Current and previous observation periods overlap; interpret "
