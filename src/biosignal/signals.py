@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from math import sqrt
 from typing import Optional
 
 from .models import AMRObservation
@@ -18,6 +19,34 @@ class AMRSignal:
     previous_sample_count: Optional[int] = None
     quality_notes: tuple[str, ...] = ()
     comparison_status: str = "not_assessed"
+    current_rate_interval_95: tuple[float, float] | None = None
+    previous_rate_interval_95: tuple[float, float] | None = None
+
+
+def wilson_interval(successes: int, trials: int, *, z: float = 1.959963984540054) -> tuple[float, float]:
+    """Return a two-sided Wilson score interval for a binomial proportion.
+
+    This quantifies binomial sampling uncertainty only. It does not correct for
+    biased sampling, clustering, repeated isolates, case-mix shifts, or other
+    surveillance-design limitations.
+    """
+    if trials <= 0:
+        raise ValueError("trials must be greater than zero")
+    if not 0 <= successes <= trials:
+        raise ValueError("successes must be between zero and trials")
+    if z <= 0:
+        raise ValueError("z must be greater than zero")
+
+    p = successes / trials
+    z2 = z * z
+    denominator = 1 + z2 / trials
+    center = (p + z2 / (2 * trials)) / denominator
+    half_width = (
+        z
+        * sqrt((p * (1 - p) / trials) + (z2 / (4 * trials * trials)))
+        / denominator
+    )
+    return (max(0.0, center - half_width), min(1.0, center + half_width))
 
 
 def _normalized(value: str | None) -> str | None:
@@ -33,13 +62,13 @@ def detect_amr_signal(
     alert_rate: float = 0.20,
     alert_change: float = 0.10,
 ) -> AMRSignal:
-    """Create a transparent AMR signal from aggregated observations.
+    """Create a transparent AMR research signal, not a validated alert.
 
     alert_change is an absolute resistance-rate difference expressed as a
     proportion: 0.10 means a 10-percentage-point increase, not a 10% relative
-    increase. This is a research heuristic, not a clinical recommendation or
-    validated epidemiological threshold. Period overlap and observable
-    metadata changes are caveats; they are not statistically corrected.
+    increase. Thresholds are configurable heuristics, not validated
+    epidemiological cutoffs. Wilson intervals quantify binomial sampling
+    uncertainty only and do not establish representativeness or comparability.
     """
     if minimum_samples < 1:
         raise ValueError("minimum_samples must be at least 1")
@@ -55,10 +84,18 @@ def detect_amr_signal(
         if previous_rate is not None
         else None
     )
-    # Absolute difference in proportions; 0.15 = 15 percentage points.
     change = round(raw_change, 12) if raw_change is not None else None
+    current_interval = wilson_interval(current.resistant_count, current.tested_count)
+    previous_interval = (
+        wilson_interval(previous.resistant_count, previous.tested_count)
+        if previous is not None
+        else None
+    )
 
-    quality_notes: list[str] = []
+    quality_notes: list[str] = [
+        "Rate interval is a Wilson 95% binomial interval; it does not account for sampling bias, clustering, duplicate isolates, or representativeness.",
+        "Alert thresholds are configurable research heuristics and have not been calibrated against surveillance outcomes.",
+    ]
     if _normalized(current.region) is None or _normalized(current.source) is None:
         quality_notes.append(
             "Current observation has missing region or source metadata; "
@@ -153,16 +190,30 @@ def detect_amr_signal(
             current, previous, previous_rate, previous_sample_count, change
         )
 
+    interval_text = (
+        f" Current resistance rate Wilson 95% interval: "
+        f"{current_interval[0]:.1%}–{current_interval[1]:.1%}."
+    )
+    if previous_interval is not None:
+        interval_text += (
+            f" Previous rate Wilson 95% interval: "
+            f"{previous_interval[0]:.1%}–{previous_interval[1]:.1%}."
+        )
+    explanation += interval_text
     if quality_notes:
         explanation += " " + " ".join(quality_notes)
 
-    # This reports only checks supported by the current schema; it is not
-    # proof that two surveillance datasets are fully comparable.
     comparison_status = (
         "not_assessed"
         if previous is None
         else "caution"
-        if quality_notes
+        if any(
+            note not in {
+                "Rate interval is a Wilson 95% binomial interval; it does not account for sampling bias, clustering, duplicate isolates, or representativeness.",
+                "Alert thresholds are configurable research heuristics and have not been calibrated against surveillance outcomes.",
+            }
+            for note in quality_notes
+        )
         else "no_known_mismatch"
     )
 
@@ -179,6 +230,8 @@ def detect_amr_signal(
         previous_sample_count,
         tuple(quality_notes),
         comparison_status,
+        current_interval,
+        previous_interval,
     )
 
 
