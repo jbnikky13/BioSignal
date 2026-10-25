@@ -45,3 +45,28 @@ Until representative outcome-labelled data and a pre-specified holdout evaluatio
 - keep data_quality_score labelled as an uncalibrated engineering heuristic;
 - do not claim sensitivity, specificity, predictive value, calibration, or out-of-sample validity;
 - do not use outputs alone for treatment, infection-control, procurement, or public-health decisions.
+
+
+## Implemented evaluation harness
+
+BioSignal now includes `src/biosignal/calibration.py` with:
+- strict validation of reference labels and their source/protocol provenance;
+- chronological development/holdout splitting;
+- development-only threshold selection using a pre-specified Youden's J objective;
+- frozen-threshold holdout evaluation;
+- sensitivity, specificity, PPV, NPV, false-positive rate, denominators, and Wilson intervals for selected proportions;
+- AUROC for evaluating whether the uncalibrated data-quality score ranks independently adjudicated acceptable-quality observations above unacceptable-quality observations.
+
+The blank schema template is `data/examples/calibration_template.csv`. It intentionally contains no fabricated records or outcomes. These functions are evaluation infrastructure, not evidence of calibration. Do not run threshold selection on holdout data or report performance until a real dataset has passed provenance, coverage, and label-quality review.
+
+## Data-quality score evaluation
+
+The existing `data_quality_score` is not a probability and must not be probability-calibrated merely by renaming it. To evaluate it, experts blinded to the score should independently label records against a documented data-quality rubric (including coverage, representativeness, denominator validity, deduplication, and testing comparability). Use development data to choose any score cutoff, then evaluate discrimination and error rates on a separate chronological and preferably external-site holdout. If a probability is ultimately needed, fit a pre-specified mapping on development data and evaluate calibration only on untouched holdout data, with calibration plots, Brier score, uncertainty intervals, and subgroup analysis.
+
+## Candidate public data sources
+
+- WHO GLASS provides official national AMR surveillance and a global dashboard; it is a suitable candidate for aggregate trend evaluation where the downloaded release exposes compatible denominators and time points. Source: https://www.who.int/data/gho/data/themes/topics/topic-details/GHO/global-antimicrobial-resistance-surveillance-system-glass
+- ECDC EARS-Net provides public descriptive surveillance results and historical reports for invasive isolates. Its documentation explicitly warns about variation in coverage, sampling, and laboratory practices, so it is not automatically representative of other care settings or countries. Source: https://www.ecdc.europa.eu/en/about-us/networks/disease-networks-and-laboratory-networks/ears-net-data
+- Public aggregate sources such as NovAMR can support exploratory checks, but its documentation describes heterogeneous institutions, years, specimen groups, methods, and care settings. It must not be treated as a homogeneous validation cohort without filtering and provenance review. Source: https://www.novamr.org/data
+
+No external data have yet been ingested or scored in this PR. The next evidence-producing step is to obtain a documented dataset release with stable country/site-time series, usable denominators, source coverage metadata, and an outcome definition that was fixed before threshold selection. If those conditions are not met, the result must remain an implementation-only validation, not scientific validation.
