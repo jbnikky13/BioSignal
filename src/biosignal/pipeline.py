@@ -26,9 +26,9 @@ def run(
     ordered = sorted(
         observations,
         key=lambda item: (
-            item.organism.casefold(),
-            item.antimicrobial.casefold(),
-            (item.region or "").casefold(),
+            item.organism.strip().casefold(),
+            item.antimicrobial.strip().casefold(),
+            item.region.strip().casefold() if item.region and item.region.strip() else "",
             item.period_start,
             item.period_end,
         ),
