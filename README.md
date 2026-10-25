@@ -173,4 +173,14 @@ The default live validation sample is now `SAMN05215988`, an *Escherichia coli* 
 
 The public-isolate path now validates BioSample accession syntax, filters assembly records that explicitly belong to a different BioSample, and selects an assembly deterministically (complete/chromosome/scaffold/contig, then RefSeq GCF over GenBank GCA). The live workflow also compiles the Nextflow graph in stub mode before contacting the live NCBI dataset.
 
-AMRFinderPlus is intentionally run in nucleotide mode here. In AMRFinderPlus, a GFF file is not an additional input to nucleotide-only mode; GFF is used with protein input for coordinate-aware combined analysis. The repository therefore keeps GFF parsing as a separate capability rather than passing an invalid `-n + -g` combination to the nucleotide-only execution path. 
+AMRFinderPlus is intentionally run in nucleotide mode here. In AMRFinderPlus, a GFF file is not an additional input to nucleotide-only mode; GFF is used with protein input for coordinate-aware combined analysis. The repository therefore keeps GFF parsing as a separate capability rather than passing an invalid `-n + -g` combination to the nucleotide-only execution path.
+
+### AMR comparison status
+
+Each generated signal now includes a `comparison_status` field describing what the current schema can establish:
+
+- `not_assessed`: no prior observation was supplied, or missing metadata prevents even a basic coverage check.
+- `caution`: the comparison has a detected caveat, such as overlapping periods, changed region/source, or missing coverage metadata.
+- `no_known_mismatch`: no mismatch was detected in the available period, region and source fields.
+
+`no_known_mismatch` does **not** mean the datasets are proven equivalent. The current observation schema does not capture all important comparability factors, such as patient mix, specimen type, testing criteria, or laboratory methods. These statuses are transparency aids, not calibrated confidence scores or clinical recommendations.
