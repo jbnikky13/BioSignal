@@ -47,6 +47,12 @@ def test_detects_rising_resistance_and_reports_both_sample_sizes():
     assert "n=100" in signal.explanation
     assert signal.quality_notes == ()
     assert signal.comparison_status == "no_known_mismatch"
+    assert signal.current_rate_interval_95 is not None
+    assert signal.current_rate_interval_95 is not None
+    assert signal.previous_rate_interval_95 is not None
+    assert signal.current_rate_interval_95[0] < signal.current_rate < signal.current_rate_interval_95[1]
+    assert "not been calibrated against surveillance outcomes" in signal.explanation
+    assert "Wilson 95% interval" in signal.explanation
 
 
 def test_marks_small_samples_as_insufficient_and_warns_about_instability():
@@ -222,3 +228,27 @@ def test_alert_change_is_absolute_percentage_points():
     assert signal.change == 0.10
     assert signal.severity == "watch"
     assert "10.0 percentage points" in signal.explanation
+
+
+
+def test_wilson_interval_handles_zero_and_all_successes():
+    from biosignal.signals import wilson_interval
+
+    zero = wilson_interval(0, 20)
+    all_successes = wilson_interval(20, 20)
+
+    assert zero[0] == 0.0
+    assert 0.0 < zero[1] < 0.5
+    assert all_successes[1] == 1.0
+    assert 0.5 < all_successes[0] < 1.0
+
+
+@pytest.mark.parametrize(
+    ("successes", "trials"),
+    [(-1, 10), (11, 10), (0, 0)],
+)
+def test_wilson_interval_rejects_invalid_counts(successes, trials):
+    from biosignal.signals import wilson_interval
+
+    with pytest.raises(ValueError):
+        wilson_interval(successes, trials)
