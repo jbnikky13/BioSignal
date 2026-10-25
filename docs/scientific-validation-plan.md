@@ -51,7 +51,7 @@ Until representative outcome-labelled data and a pre-specified holdout evaluatio
 
 BioSignal now includes `src/biosignal/calibration.py` with:
 - strict validation of reference labels and their source/protocol provenance;
-- chronological development/holdout splitting;
+- chronological development/holdout splitting and a disjoint external-surveillance-unit holdout split;
 - development-only threshold selection using a pre-specified Youden's J objective;
 - frozen-threshold holdout evaluation;
 - sensitivity, specificity, PPV, NPV, false-positive rate, denominators, and Wilson intervals for selected proportions;
