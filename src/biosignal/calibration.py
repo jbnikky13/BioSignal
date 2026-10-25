@@ -75,15 +75,17 @@ def _parse_day(value: object, field: str) -> date:
 def validate_rows(rows: Iterable[Mapping[str, object]]) -> list[dict[str, object]]:
     """Validate externally labelled records without creating or imputing labels.
 
-    Required fields: period_end, current_rate, previous_rate, sample_count,
-    previous_sample_count, reference_outcome, reference_source, protocol_id,
-    and surveillance_unit. Rates are proportions in [0, 1]. A missing previous
-    rate is allowed and disables the change-based rule for that record.
+    Required fields include period/date, organism/drug/region/source identifiers,
+    dataset release and coverage notes, reference outcome/protocol provenance,
+    surveillance unit, rates, and sample counts. Rates are proportions in [0, 1].
+    A missing previous rate is allowed and disables the change-based rule for
+    that record. Unknown metadata should be explicitly recorded as "unknown" or
+    "not reported", rather than silently omitted.
     """
     required = {
-        "period_end", "current_rate", "sample_count",
-        "reference_outcome", "reference_source", "protocol_id",
-        "surveillance_unit",
+        "period_end", "organism", "antimicrobial", "region", "source",
+        "dataset_release", "coverage_notes", "current_rate", "sample_count",
+        "reference_outcome", "reference_source", "protocol_id", "surveillance_unit",
     }
     result: list[dict[str, object]] = []
     for index, row in enumerate(rows, start=1):
@@ -126,8 +128,9 @@ def validate_rows(rows: Iterable[Mapping[str, object]]) -> list[dict[str, object
         if outcome not in (0, 1, False, True, "0", "1"):
             raise ValueError(f"row {index} reference_outcome must be independently labelled 0 or 1")
         normalized["reference_outcome"] = int(outcome)
-        if not str(row["reference_source"]).strip() or not str(row["protocol_id"]).strip():
-            raise ValueError(f"row {index} must record reference_source and protocol_id")
+        for field in ("organism", "antimicrobial", "region", "source", "dataset_release", "coverage_notes", "reference_source", "protocol_id"):
+            if not str(row[field]).strip():
+                raise ValueError(f"row {index} must record {field}; use 'unknown' or 'not reported' when unavailable")
         if not str(row["surveillance_unit"]).strip():
             raise ValueError(f"row {index} surveillance_unit must be non-empty")
         result.append(normalized)
