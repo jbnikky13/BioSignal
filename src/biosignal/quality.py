@@ -1,19 +1,47 @@
 """Transparent, uncalibrated data-quality heuristics for AMR observations."""
 
 from dataclasses import dataclass
+import warnings
 
 from .models import AMRObservation
 
 
 @dataclass(frozen=True)
 class QualityAssessment:
+    """Heuristic data-quality scores; none are statistical confidence estimates.
+
+    `data_quality_score` is a weighted engineering score in [0, 1], not a
+    probability, calibrated confidence value, or measure of clinical validity.
+    """
+
     sample_score: float
     completeness_score: float
     temporal_score: float
-    confidence_score: float
-    label: str
+    data_quality_score: float
+    data_quality_label: str
     reasons: tuple[str, ...]
     calibration_status: str = "uncalibrated_heuristic"
+
+    @property
+    def confidence_score(self) -> float:
+        """Deprecated compatibility alias; use data_quality_score instead."""
+        warnings.warn(
+            "confidence_score is deprecated because this value is not statistical "
+            "confidence; use data_quality_score instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.data_quality_score
+
+    @property
+    def label(self) -> str:
+        """Deprecated compatibility alias; use data_quality_label instead."""
+        warnings.warn(
+            "label is deprecated; use data_quality_label instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.data_quality_label
 
 
 def assess_quality(
@@ -21,11 +49,12 @@ def assess_quality(
     *,
     target_samples: int = 100,
 ) -> QualityAssessment:
-    """Return transparent quality heuristics, not calibrated statistical confidence.
+    """Return a transparent engineering score, not calibrated statistical confidence.
 
-    The weighted score is a configurable engineering heuristic. It has not
-    been calibrated against surveillance outcomes and must not be interpreted
-    as a probability that an observation or signal is correct.
+    The weighted score is a configurable heuristic. It has not been calibrated
+    against surveillance outcomes and must not be interpreted as a probability
+    that an observation or signal is correct, or as clinical/epidemiological
+    validation.
     """
     if target_samples <= 0:
         raise ValueError("target_samples must be greater than zero")
@@ -55,17 +84,17 @@ def assess_quality(
         3,
     )
     label = (
-        "higher_data_confidence"
+        "higher_data_quality_score"
         if score >= 0.8
-        else "moderate_data_confidence"
+        else "moderate_data_quality_score"
         if score >= 0.5
-        else "limited_data_confidence"
+        else "limited_data_quality_score"
     )
     return QualityAssessment(
         sample_score=round(sample_score, 3),
         completeness_score=round(completeness, 3),
         temporal_score=round(temporal, 3),
-        confidence_score=score,
-        label=label,
+        data_quality_score=score,
+        data_quality_label=label,
         reasons=tuple(reasons),
     )
