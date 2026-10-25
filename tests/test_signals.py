@@ -39,6 +39,7 @@ def test_detects_rising_resistance_and_reports_both_sample_sizes():
     assert "increased" in signal.explanation
     assert "n=100" in signal.explanation
     assert signal.quality_notes == ()
+    assert signal.comparison_status == "no_known_mismatch"
 
 
 def test_marks_small_samples_as_insufficient_and_warns_about_instability():
@@ -53,6 +54,7 @@ def test_baseline_signal():
 
     assert signal.severity == "baseline"
     assert signal.current_rate == 0.05
+    assert signal.comparison_status == "not_assessed"
     assert "not a validated epidemiological threshold" in signal.explanation
 
 
@@ -74,6 +76,7 @@ def test_overlapping_periods_are_explicitly_flagged():
     assert len(signal.quality_notes) == 1
     assert "overlap" in signal.quality_notes[0]
     assert "overlap" in signal.explanation
+    assert signal.comparison_status == "caution"
 
 
 def test_source_change_is_flagged_as_possible_surveillance_coverage_shift():
@@ -85,6 +88,7 @@ def test_source_change_is_flagged_as_possible_surveillance_coverage_shift():
     assert signal.severity == "watch"
     assert any("Source changed" in note for note in signal.quality_notes)
     assert "surveillance coverage" in signal.explanation
+    assert signal.comparison_status == "caution"
 
 
 def test_region_change_is_flagged_when_comparing_observations_directly():
@@ -95,6 +99,7 @@ def test_region_change_is_flagged_when_comparing_observations_directly():
 
     assert any("Region changed" in note for note in signal.quality_notes)
     assert "geographic coverage" in signal.explanation
+    assert signal.comparison_status == "caution"
 
 
 def test_missing_coverage_metadata_is_explicitly_flagged():
@@ -102,6 +107,7 @@ def test_missing_coverage_metadata_is_explicitly_flagged():
 
     assert any("missing region or source" in note for note in signal.quality_notes)
     assert "cannot be fully assessed" in signal.explanation
+    assert signal.comparison_status == "not_assessed"
 
 
 @pytest.mark.parametrize(
