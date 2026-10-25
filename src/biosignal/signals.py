@@ -20,6 +20,11 @@ class AMRSignal:
     comparison_status: str = "not_assessed"
 
 
+def _normalized(value: str | None) -> str | None:
+    """Normalize comparison text without changing labels stored for display."""
+    return value.strip().casefold() if value and value.strip() else None
+
+
 def detect_amr_signal(
     current: AMRObservation,
     previous: Optional[AMRObservation] = None,
@@ -30,9 +35,11 @@ def detect_amr_signal(
 ) -> AMRSignal:
     """Create a transparent AMR signal from aggregated observations.
 
-    This is a research heuristic, not a clinical recommendation or
-    epidemiological threshold. Period overlap and observable source/region
-    changes are surfaced as caveats; they are not statistically corrected.
+    alert_change is an absolute resistance-rate difference expressed as a
+    proportion: 0.10 means a 10-percentage-point increase, not a 10% relative
+    increase. This is a research heuristic, not a clinical recommendation or
+    validated epidemiological threshold. Period overlap and observable
+    metadata changes are caveats; they are not statistically corrected.
     """
     if minimum_samples < 1:
         raise ValueError("minimum_samples must be at least 1")
@@ -48,10 +55,11 @@ def detect_amr_signal(
         if previous_rate is not None
         else None
     )
+    # Absolute difference in proportions; 0.15 = 15 percentage points.
     change = round(raw_change, 12) if raw_change is not None else None
 
     quality_notes: list[str] = []
-    if not current.region or not current.source:
+    if _normalized(current.region) is None or _normalized(current.source) is None:
         quality_notes.append(
             "Current observation has missing region or source metadata; "
             "surveillance coverage cannot be fully assessed."
@@ -64,7 +72,7 @@ def detect_amr_signal(
     )
     missing_current = [
         label for field, label in comparability_fields
-        if not getattr(current, field)
+        if _normalized(getattr(current, field)) is None
     ]
     if missing_current:
         quality_notes.append(
@@ -75,12 +83,13 @@ def detect_amr_signal(
     if previous is not None:
         changed_fields = [
             label for field, label in comparability_fields
-            if getattr(current, field) and getattr(previous, field)
-            and getattr(current, field) != getattr(previous, field)
+            if _normalized(getattr(current, field)) is not None
+            and _normalized(getattr(previous, field)) is not None
+            and _normalized(getattr(current, field)) != _normalized(getattr(previous, field))
         ]
         missing_previous = [
             label for field, label in comparability_fields
-            if not getattr(previous, field)
+            if _normalized(getattr(previous, field)) is None
         ]
         if changed_fields:
             quality_notes.append(
@@ -97,22 +106,31 @@ def detect_amr_signal(
                 "Current and previous observation periods overlap; interpret "
                 "the change cautiously because the periods may not be independent."
             )
-        if current.region != previous.region:
+        if _normalized(current.region) != _normalized(previous.region):
             quality_notes.append(
                 "Region changed between observations; the rate difference may "
                 "reflect geographic coverage rather than a temporal trend."
             )
-        if current.source != previous.source:
+        if _normalized(current.source) != _normalized(previous.source):
             quality_notes.append(
                 "Source changed between observations; differences in reporting "
                 "or surveillance coverage may explain part of the rate change."
             )
-        if not previous.region or not previous.source:
+        if _normalized(previous.region) is None or _normalized(previous.source) is None:
             quality_notes.append(
                 "Previous observation has missing region or source metadata; "
                 "surveillance coverage cannot be fully compared."
             )
+        if previous.tested_count < minimum_samples:
+            quality_notes.append(
+                f"Previous observation has only {previous.tested_count} tested "
+                f"observations, below the configured minimum of {minimum_samples}; "
+                "the period-to-period change is not used to trigger a watch alert."
+            )
 
+    previous_sample_sufficient = (
+        previous is None or previous.tested_count >= minimum_samples
+    )
     if current.tested_count < minimum_samples:
         severity = "insufficient_data"
         explanation = (
@@ -121,7 +139,9 @@ def detect_amr_signal(
             "unstable at this sample size and should not be interpreted alone."
         )
     elif current.resistance_rate >= alert_rate or (
-        change is not None and change >= alert_change
+        change is not None
+        and previous_sample_sufficient
+        and change >= alert_change
     ):
         severity = "watch"
         explanation = _trend_explanation(
@@ -180,7 +200,7 @@ def _trend_explanation(
     direction = "increased" if change >= 0 else "decreased"
     return (
         f"Resistance for {current.organism} against {current.antimicrobial} "
-        f"{direction} by {abs(change):.1%} versus the previous period "
+        f"{direction} by {abs(change) * 100:.1f} percentage points versus the previous period "
         f"({previous_rate:.1%}, n={previous_sample_count}, to "
         f"{current.resistance_rate:.1%}, n={current.tested_count}). "
         "Interpret the comparison in light of sample sizes and surveillance "
