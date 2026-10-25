@@ -197,3 +197,10 @@ The canonical aggregated-observation CSV schema accepts optional `specimen_type`
 The `alert_change` parameter is an absolute difference between resistance proportions: `0.10` means a 10-percentage-point increase (for example, 20% to 30%), not a 10% relative increase. Trend explanations report absolute changes in percentage points. The default threshold remains a configurable research heuristic, not a validated epidemiological threshold.
 
 The minimum-sample safeguard applies to both periods when deciding whether a period-to-period change can trigger a `watch` alert. If the previous observation is below the configured minimum, BioSignal retains the descriptive rate difference but adds a caveat and does not use that change alone to trigger a watch. The current-period sample-size rule remains separate. These simple safeguards do not replace statistical uncertainty estimates or surveillance-design review.
+
+
+### Region-specific time series and quality-score naming
+
+The pipeline groups observations by normalized organism, antimicrobial, and region. It compares periods only within the same group; it does **not** pair a north-region observation with a south-region observation and then emit a region-change warning. Each region starts its own series. The direct `compare_periods` / `detect_amr_signal` path can flag a region mismatch if a caller explicitly supplies a cross-region pair. A lack of a mismatch warning in the grouped pipeline is therefore not evidence that different regions were compared.
+
+The quality assessment exposes `data_quality_score` and `data_quality_label`. The score is an uncalibrated engineering heuristic based on sample size, metadata completeness, and observation-window length. It is not statistical confidence, a probability, or a measure of clinical validity. The former `confidence_score` and `label` attributes remain temporarily as compatibility aliases and emit Python `DeprecationWarning` messages; downstream consumers should migrate to the explicitly named fields. Labels now use `higher_data_quality_score`, `moderate_data_quality_score`, and `limited_data_quality_score`.
