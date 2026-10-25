@@ -30,8 +30,8 @@ def detect_amr_signal(
     """Create a transparent AMR signal from aggregated observations.
 
     This is a research heuristic, not a clinical recommendation or
-    epidemiological threshold. Period overlap is surfaced as a caveat rather
-    than silently treated as independent sequential evidence.
+    epidemiological threshold. Period overlap and observable source/region
+    changes are surfaced as caveats; they are not statistically corrected.
     """
     if minimum_samples < 1:
         raise ValueError("minimum_samples must be at least 1")
@@ -50,11 +50,33 @@ def detect_amr_signal(
     change = round(raw_change, 12) if raw_change is not None else None
 
     quality_notes: list[str] = []
-    if previous is not None and current.period_start <= previous.period_end:
+    if not current.region or not current.source:
         quality_notes.append(
-            "Current and previous observation periods overlap; interpret the "
-            "change cautiously because the periods may not be independent."
+            "Current observation has missing region or source metadata; "
+            "surveillance coverage cannot be fully assessed."
         )
+
+    if previous is not None:
+        if current.period_start <= previous.period_end:
+            quality_notes.append(
+                "Current and previous observation periods overlap; interpret "
+                "the change cautiously because the periods may not be independent."
+            )
+        if current.region != previous.region:
+            quality_notes.append(
+                "Region changed between observations; the rate difference may "
+                "reflect geographic coverage rather than a temporal trend."
+            )
+        if current.source != previous.source:
+            quality_notes.append(
+                "Source changed between observations; differences in reporting "
+                "or surveillance coverage may explain part of the rate change."
+            )
+        if not previous.region or not previous.source:
+            quality_notes.append(
+                "Previous observation has missing region or source metadata; "
+                "surveillance coverage cannot be fully compared."
+            )
 
     if current.tested_count < minimum_samples:
         severity = "insufficient_data"
@@ -63,46 +85,21 @@ def detect_amr_signal(
             f"the configured minimum is {minimum_samples}. The rate is "
             "unstable at this sample size and should not be interpreted alone."
         )
-        return AMRSignal(
-            current.organism,
-            current.antimicrobial,
-            current.resistance_rate,
-            previous_rate,
-            change,
-            current.tested_count,
-            current.region,
-            severity,
-            explanation,
-            previous_sample_count,
-            tuple(quality_notes),
-        )
-
-    if current.resistance_rate >= alert_rate or (
+    elif current.resistance_rate >= alert_rate or (
         change is not None and change >= alert_change
     ):
         severity = "watch"
+        explanation = _trend_explanation(
+            current, previous, previous_rate, previous_sample_count, change
+        )
     else:
         severity = "baseline"
+        explanation = _trend_explanation(
+            current, previous, previous_rate, previous_sample_count, change
+        )
 
-    if previous_rate is None:
-        explanation = (
-            f"{current.organism} shows a {current.resistance_rate:.1%} "
-            f"resistance rate to {current.antimicrobial} across "
-            f"{current.tested_count} tested observations. This is a research "
-            "watch heuristic, not a validated epidemiological threshold."
-        )
-    else:
-        direction = "increased" if change >= 0 else "decreased"
-        explanation = (
-            f"Resistance for {current.organism} against {current.antimicrobial} "
-            f"{direction} by {abs(change):.1%} versus the previous period "
-            f"({previous_rate:.1%}, n={previous_sample_count}, to "
-            f"{current.resistance_rate:.1%}, n={current.tested_count}). "
-            "Interpret the comparison in light of sample sizes and surveillance "
-            "coverage; this is not a causal conclusion."
-        )
-        if quality_notes:
-            explanation += " " + " ".join(quality_notes)
+    if quality_notes:
+        explanation += " " + " ".join(quality_notes)
 
     return AMRSignal(
         current.organism,
@@ -116,4 +113,30 @@ def detect_amr_signal(
         explanation,
         previous_sample_count,
         tuple(quality_notes),
+    )
+
+
+def _trend_explanation(
+    current: AMRObservation,
+    previous: Optional[AMRObservation],
+    previous_rate: Optional[float],
+    previous_sample_count: Optional[int],
+    change: Optional[float],
+) -> str:
+    if previous is None or previous_rate is None or change is None:
+        return (
+            f"{current.organism} shows a {current.resistance_rate:.1%} "
+            f"resistance rate to {current.antimicrobial} across "
+            f"{current.tested_count} tested observations. This is a research "
+            "watch heuristic, not a validated epidemiological threshold."
+        )
+
+    direction = "increased" if change >= 0 else "decreased"
+    return (
+        f"Resistance for {current.organism} against {current.antimicrobial} "
+        f"{direction} by {abs(change):.1%} versus the previous period "
+        f"({previous_rate:.1%}, n={previous_sample_count}, to "
+        f"{current.resistance_rate:.1%}, n={current.tested_count}). "
+        "Interpret the comparison in light of sample sizes and surveillance "
+        "coverage; this is not a causal conclusion."
     )
