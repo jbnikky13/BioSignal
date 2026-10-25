@@ -237,3 +237,35 @@ def evaluate_holdout(
     labels = [int(row["reference_outcome"]) for row in holdout_rows]
     predictions = [predict_alert(row, thresholds) for row in holdout_rows]
     return binary_metrics(labels, predictions)
+
+
+
+def roc_auc(labels: Sequence[int], scores: Sequence[float]) -> float:
+    """Compute rank-based AUROC for a heuristic score against independent labels.
+
+    This assesses discrimination only. It does not calibrate the score as a
+    probability. Tied scores receive average ranks.
+    """
+    if len(labels) != len(scores) or not labels:
+        raise ValueError("labels and scores must have equal, non-zero length")
+    if any(label not in (0, 1) for label in labels):
+        raise ValueError("labels must be binary")
+    positives = sum(labels)
+    negatives = len(labels) - positives
+    if positives == 0 or negatives == 0:
+        raise ValueError("AUROC requires both positive and negative reference labels")
+    if any(not 0 <= float(score) <= 1 for score in scores):
+        raise ValueError("scores must be between 0 and 1")
+
+    order = sorted(range(len(scores)), key=lambda index: float(scores[index]))
+    rank_sum_positive = 0.0
+    cursor = 0
+    while cursor < len(order):
+        end = cursor + 1
+        score = float(scores[order[cursor]])
+        while end < len(order) and float(scores[order[end]]) == score:
+            end += 1
+        average_rank = ((cursor + 1) + end) / 2
+        rank_sum_positive += average_rank * sum(labels[order[i]] for i in range(cursor, end))
+        cursor = end
+    return (rank_sum_positive - positives * (positives + 1) / 2) / (positives * negatives)
