@@ -38,7 +38,13 @@ def run(
     previous_key: tuple[str, str, str | None] | None = None
 
     for current in ordered:
-        key = (current.organism, current.antimicrobial, current.region)
+        # Group using normalized labels so case/outer whitespace differences do
+        # not split one organism/drug/region series. Keep original labels on output.
+        key = (
+            current.organism.strip().casefold(),
+            current.antimicrobial.strip().casefold(),
+            current.region.strip().casefold() if current.region and current.region.strip() else None,
+        )
         if key != previous_key:
             previous = None
 
