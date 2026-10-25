@@ -3,7 +3,7 @@ from datetime import date
 import pytest
 
 from biosignal.models import AMRObservation
-from biosignal.quality import assess_quality
+from biosignal.quality import QualityAssessment, assess_quality
 
 
 def observation(
@@ -29,16 +29,16 @@ def observation(
 def test_quality_penalizes_missing_metadata():
     assessment = assess_quality(observation(region=None, source=None, tested_count=25))
 
-    assert assessment.confidence_score < 0.8
+    assert assessment.data_quality_score < 0.8
     assert "region unavailable" in assessment.reasons
     assert "source metadata unavailable" in assessment.reasons
 
 
-def test_complete_large_period_scores_higher_but_is_not_calibrated():
+def test_complete_large_period_has_high_heuristic_score_but_is_not_calibrated():
     assessment = assess_quality(observation())
 
-    assert assessment.confidence_score == 1.0
-    assert assessment.label == "higher_data_confidence"
+    assert assessment.data_quality_score == 1.0
+    assert assessment.data_quality_label == "higher_data_quality_score"
     assert assessment.calibration_status == "uncalibrated_heuristic"
 
 
@@ -50,6 +50,22 @@ def test_quality_flags_small_sample_and_short_window():
     assert "very small sample" in assessment.reasons
     assert "short observation window" in assessment.reasons
     assert assessment.temporal_score < 1.0
+
+
+def test_legacy_confidence_aliases_warn_and_remain_compatible():
+    assessment = QualityAssessment(
+        sample_score=1.0,
+        completeness_score=1.0,
+        temporal_score=1.0,
+        data_quality_score=0.9,
+        data_quality_label="higher_data_quality_score",
+        reasons=(),
+    )
+
+    with pytest.warns(DeprecationWarning, match="not statistical confidence"):
+        assert assessment.confidence_score == 0.9
+    with pytest.warns(DeprecationWarning, match="data_quality_label"):
+        assert assessment.label == "higher_data_quality_score"
 
 
 @pytest.mark.parametrize("target_samples", [0, -1])
