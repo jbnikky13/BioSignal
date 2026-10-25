@@ -41,6 +41,9 @@ def row_to_observation(row: dict[str, str]) -> AMRObservation:
         resistant_count=int(row["resistant_count"]),
         region=_optional(row.get("region")),
         source=_optional(row.get("source")),
+        specimen_type=_optional(row.get("specimen_type")),
+        testing_criteria=_optional(row.get("testing_criteria")),
+        laboratory_method=_optional(row.get("laboratory_method")),
     )
 
 
