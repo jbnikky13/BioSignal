@@ -17,6 +17,7 @@ class AMRSignal:
     explanation: str
     previous_sample_count: Optional[int] = None
     quality_notes: tuple[str, ...] = ()
+    comparison_status: str = "not_assessed"
 
 
 def detect_amr_signal(
@@ -101,6 +102,16 @@ def detect_amr_signal(
     if quality_notes:
         explanation += " " + " ".join(quality_notes)
 
+    # This reports only checks supported by the current schema; it is not
+    # proof that two surveillance datasets are fully comparable.
+    comparison_status = (
+        "not_assessed"
+        if previous is None
+        else "caution"
+        if quality_notes
+        else "no_known_mismatch"
+    )
+
     return AMRSignal(
         current.organism,
         current.antimicrobial,
@@ -113,6 +124,7 @@ def detect_amr_signal(
         explanation,
         previous_sample_count,
         tuple(quality_notes),
+        comparison_status,
     )
 
 
