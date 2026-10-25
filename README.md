@@ -179,11 +179,11 @@ AMRFinderPlus is intentionally run in nucleotide mode here. In AMRFinderPlus, a 
 
 Each generated signal now includes a `comparison_status` field describing what the current schema can establish:
 
-- `not_assessed`: no prior observation was supplied, or missing metadata prevents even a basic coverage check.
-- `caution`: the comparison has a detected caveat, such as overlapping periods, changed region/source, or missing coverage metadata.
+- `not_assessed`: no prior observation was supplied, so no period-to-period comparison was assessed.
+- `caution`: a prior observation exists, but the comparison has a detected caveat, such as overlapping periods, changed region/source, or missing coverage/comparability metadata.
 - `no_known_mismatch`: no mismatch was detected in the available period, region and source fields.
 
-`no_known_mismatch` does **not** mean the datasets are proven equivalent. The current observation schema does not capture all important comparability factors, such as patient mix, specimen type, testing criteria, or laboratory methods. These statuses are transparency aids, not calibrated confidence scores or clinical recommendations.
+`no_known_mismatch` does **not** mean the datasets are proven equivalent. The schema does not capture all important comparability factors, such as patient mix, testing indications, laboratory implementation, and other unrecorded factors. Optional specimen type, testing criteria, and laboratory method fields are supported when source data provides them. These statuses are transparency aids, not calibrated confidence scores or clinical recommendations.
 
 
 ### AMR observation comparability safeguards
