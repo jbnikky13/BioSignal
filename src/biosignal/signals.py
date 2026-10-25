@@ -92,10 +92,7 @@ def detect_amr_signal(
         else None
     )
 
-    quality_notes: list[str] = [
-        "Rate interval is a Wilson 95% binomial interval; it does not account for sampling bias, clustering, duplicate isolates, or representativeness.",
-        "Alert thresholds are configurable research heuristics and have not been calibrated against surveillance outcomes.",
-    ]
+    quality_notes: list[str] = []
     if _normalized(current.region) is None or _normalized(current.source) is None:
         quality_notes.append(
             "Current observation has missing region or source metadata; "
@@ -200,6 +197,12 @@ def detect_amr_signal(
             f"{previous_interval[0]:.1%}–{previous_interval[1]:.1%}."
         )
     explanation += interval_text
+    explanation += (
+        " Alert thresholds are configurable research heuristics and have not been "
+        "calibrated against surveillance outcomes. Wilson intervals quantify "
+        "binomial sampling uncertainty only; they do not account for sampling "
+        "bias, clustering, duplicate isolates, or representativeness."
+    )
     if quality_notes:
         explanation += " " + " ".join(quality_notes)
 
@@ -207,13 +210,7 @@ def detect_amr_signal(
         "not_assessed"
         if previous is None
         else "caution"
-        if any(
-            note not in {
-                "Rate interval is a Wilson 95% binomial interval; it does not account for sampling bias, clustering, duplicate isolates, or representativeness.",
-                "Alert thresholds are configurable research heuristics and have not been calibrated against surveillance outcomes.",
-            }
-            for note in quality_notes
-        )
+        if quality_notes
         else "no_known_mismatch"
     )
 
