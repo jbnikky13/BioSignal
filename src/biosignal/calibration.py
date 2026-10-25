@@ -269,3 +269,23 @@ def roc_auc(labels: Sequence[int], scores: Sequence[float]) -> float:
         rank_sum_positive += average_rank * sum(labels[order[i]] for i in range(cursor, end))
         cursor = end
     return (rank_sum_positive - positives * (positives + 1) / 2) / (positives * negatives)
+
+
+
+def external_unit_split(
+    rows: Sequence[Mapping[str, object]], *, holdout_units: set[str]
+) -> tuple[list[Mapping[str, object]], list[Mapping[str, object]]]:
+    """Hold out entire surveillance units to test transport across sites/regions.
+
+    The caller must choose units before model/threshold tuning and justify why
+    they are representative of the intended deployment population.
+    """
+    if not rows:
+        raise ValueError("rows cannot be empty")
+    if not holdout_units or any(not str(unit).strip() for unit in holdout_units):
+        raise ValueError("holdout_units must contain non-empty unit identifiers")
+    train = [row for row in rows if str(row["surveillance_unit"]) not in holdout_units]
+    test = [row for row in rows if str(row["surveillance_unit"]) in holdout_units]
+    if not train or not test:
+        raise ValueError("external-unit split requires non-empty development and holdout units")
+    return train, test
