@@ -33,6 +33,7 @@ def test_pipeline_compares_sequential_periods():
     assert signals[0].previous_rate is None
     assert signals[1].previous_rate == 0.20
     assert signals[1].change == 0.15
+    assert not any("Region changed" in note for note in signals[1].quality_notes)
 
 
 def test_pipeline_sorts_unsorted_periods_chronologically():
