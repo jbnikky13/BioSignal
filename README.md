@@ -184,3 +184,8 @@ Each generated signal now includes a `comparison_status` field describing what t
 - `no_known_mismatch`: no mismatch was detected in the available period, region and source fields.
 
 `no_known_mismatch` does **not** mean the datasets are proven equivalent. The current observation schema does not capture all important comparability factors, such as patient mix, specimen type, testing criteria, or laboratory methods. These statuses are transparency aids, not calibrated confidence scores or clinical recommendations.
+
+
+### AMR observation comparability safeguards
+
+The canonical aggregated-observation CSV schema accepts optional `specimen_type`, `testing_criteria`, and `laboratory_method` columns. The source-normalization helper accepts corresponding `SPECIMEN_TYPE`, `TESTING_CRITERIA`, and `LABORATORY_METHOD` fields by default, with column names configurable for source-specific exports. Existing inputs remain valid when these fields are absent; missing values remain unknown and are not inferred. Signal comparisons warn when these fields are missing or populated values differ. These checks only cover metadata supplied by the source and do not establish full epidemiological comparability. Population mix, testing indications, laboratory implementation, and other unrecorded factors may still differ.
