@@ -18,6 +18,12 @@ from biosignal.calibration import (
 def row(day, outcome, current, previous, *, n=100, previous_n=100, unit="site-A"):
     return {
         "period_end": day,
+        "organism": "E. coli",
+        "antimicrobial": "ciprofloxacin",
+        "region": "region-A",
+        "source": "public surveillance",
+        "dataset_release": "test fixture release 1",
+        "coverage_notes": "synthetic unit-test fixture; not scientific data",
         "current_rate": current,
         "previous_rate": previous,
         "sample_count": n,
