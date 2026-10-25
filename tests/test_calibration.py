@@ -8,6 +8,7 @@ from biosignal.calibration import (
     chronological_split,
     evaluate_holdout,
     predict_alert,
+    roc_auc,
     select_thresholds,
     validate_rows,
 )
@@ -100,3 +101,14 @@ def test_empty_or_single_class_training_data_is_not_silently_scored():
             alert_rates=[0.2],
             alert_changes=[0.1],
         )
+
+
+
+def test_quality_score_auc_measures_discrimination_not_probability_calibration():
+    assert roc_auc([0, 0, 1, 1], [0.1, 0.3, 0.7, 0.9]) == 1.0
+    assert roc_auc([0, 1], [0.5, 0.5]) == 0.5
+
+
+def test_quality_score_auc_requires_both_reference_classes():
+    with pytest.raises(ValueError, match="both positive and negative"):
+        roc_auc([1, 1], [0.2, 0.8])
