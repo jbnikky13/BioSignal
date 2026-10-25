@@ -81,9 +81,9 @@ def validate_rows(rows: Iterable[Mapping[str, object]]) -> list[dict[str, object
     rate is allowed and disables the change-based rule for that record.
     """
     required = {
-        "period_end", "current_rate", "previous_rate", "sample_count",
-        "previous_sample_count", "reference_outcome", "reference_source",
-        "protocol_id", "surveillance_unit",
+        "period_end", "current_rate", "sample_count",
+        "reference_outcome", "reference_source", "protocol_id",
+        "surveillance_unit",
     }
     result: list[dict[str, object]] = []
     for index, row in enumerate(rows, start=1):
@@ -92,6 +92,7 @@ def validate_rows(rows: Iterable[Mapping[str, object]]) -> list[dict[str, object
             raise ValueError(f"row {index} missing required fields: {', '.join(missing)}")
         normalized = dict(row)
         normalized["period_end"] = _parse_day(row["period_end"], "period_end")
+        normalized.setdefault("previous_rate", None)
         for field in ("current_rate", "previous_rate"):
             value = row[field]
             if value is None or value == "":
@@ -106,6 +107,7 @@ def validate_rows(rows: Iterable[Mapping[str, object]]) -> list[dict[str, object
             if not 0 <= numeric <= 1:
                 raise ValueError(f"row {index} {field} must be between 0 and 1")
             normalized[field] = numeric
+        normalized.setdefault("previous_sample_count", None)
         for field in ("sample_count", "previous_sample_count"):
             value = row[field]
             if value is None or value == "":
