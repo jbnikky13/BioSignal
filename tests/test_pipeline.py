@@ -55,3 +55,14 @@ def test_pipeline_does_not_compare_across_regions_or_organisms():
     ])
 
     assert all(signal.previous_rate is None for signal in signals)
+
+
+def test_pipeline_groups_case_and_whitespace_variants_consistently():
+    signals = run([
+        obs(date(2026, 1, 1), 20, organism="Escherichia coli", antimicrobial="ciprofloxacin", region="North"),
+        obs(date(2026, 4, 1), 35, organism=" escherichia COLI ", antimicrobial="CIPROFLOXACIN", region=" north "),
+    ])
+
+    assert signals[0].previous_rate is None
+    assert signals[1].previous_rate == 0.20
+    assert signals[1].change == 0.15
