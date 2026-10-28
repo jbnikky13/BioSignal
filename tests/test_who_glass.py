@@ -35,7 +35,7 @@ def export(rows, *, pathogen="Escherichia coli", antibiotic="Ceftriaxone"):
 
 
 def record(country, year, total=100, tested=80, resistant=20, pathogen="Escherichia coli", antibiotic="Ceftriaxone"):
-    pct = 100 * resistant / tested
+    pct = (100 * resistant / tested) if tested else 0
     return (
         f'"{country}","{country}","European Region",{year},"BLOOD",'
         f'"{pathogen}","{antibiotic}",{total},{tested},{resistant},{pct:.6f}'
@@ -53,7 +53,7 @@ def test_importer_reads_country_rows_not_chart_quantiles():
 
 
 def test_importer_rejects_summary_only_or_wrong_export():
-    with pytest.raises(ValueError, match="country-level"):
+    with pytest.raises(ValueError, match="missing"):
         parse_who_glass_export('"Year","Min","Q1"\n2018,1,2')
 
 
