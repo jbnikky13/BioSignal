@@ -70,3 +70,12 @@ The existing `data_quality_score` is not a probability and must not be probabili
 - Public aggregate sources such as NovAMR can support exploratory checks, but its documentation describes heterogeneous institutions, years, specimen groups, methods, and care settings. It must not be treated as a homogeneous validation cohort without filtering and provenance review. Source: https://www.novamr.org/data
 
 No external data have yet been ingested or scored in this PR. The next evidence-producing step is to obtain a documented dataset release with stable country/site-time series, usable denominators, source coverage metadata, and an outcome definition that was fixed before threshold selection. If those conditions are not met, the result must remain an implementation-only validation, not scientific validation.
+
+
+## WHO GLASS dashboard pilot and importer
+
+The initial public-dashboard pilot uses two bloodstream infection exports: *E. coli* / ceftriaxone (19 countries, 2018–2023) and *Acinetobacter* spp. / colistin (11 countries, 2018–2023). The dashboard CSV includes a quantile summary and a separate country-level table. Only rows under `Data for line plots for individual CTAs` are treated as country-year observations. See [the importer](../src/biosignal/who_glass.py), [audit CLI](../scripts/audit_who_glass_export.py), [pilot report](initial-who-glass-exploratory-evaluation.md), and [specific evaluation protocol](who-glass-validation-protocol.md).
+
+The importer checks denominators, reported percentages, duplicate country-year keys, and consistency with selected filters. A successful import means the CSV passed structural checks; it does not mean the observations are representative, comparable, or clinically valid. The exports do not provide independent expert quality labels, so they cannot calibrate the data-quality heuristic.
+
+The earlier +5 percentage-point next-year-change exercise is explicitly post-hoc exploratory because the target was chosen after inspecting these data. Its apparent holdout is small, includes repeated years from the same countries, and is not an independent-country validation. Do not present its metrics as confirmatory performance. For a new confirmatory evaluation, freeze the outcome and protocol first, hold out entire countries before threshold tuning, report country-level results and cluster-aware uncertainty, and include pre-specified baseline comparisons.
