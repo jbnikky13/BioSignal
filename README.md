@@ -173,4 +173,60 @@ The default live validation sample is now `SAMN05215988`, an *Escherichia coli* 
 
 The public-isolate path now validates BioSample accession syntax, filters assembly records that explicitly belong to a different BioSample, and selects an assembly deterministically (complete/chromosome/scaffold/contig, then RefSeq GCF over GenBank GCA). The live workflow also compiles the Nextflow graph in stub mode before contacting the live NCBI dataset.
 
-AMRFinderPlus is intentionally run in nucleotide mode here. In AMRFinderPlus, a GFF file is not an additional input to nucleotide-only mode; GFF is used with protein input for coordinate-aware combined analysis. The repository therefore keeps GFF parsing as a separate capability rather than passing an invalid `-n + -g` combination to the nucleotide-only execution path. 
+AMRFinderPlus is intentionally run in nucleotide mode here. In AMRFinderPlus, a GFF file is not an additional input to nucleotide-only mode; GFF is used with protein input for coordinate-aware combined analysis. The repository therefore keeps GFF parsing as a separate capability rather than passing an invalid `-n + -g` combination to the nucleotide-only execution path.
+
+### AMR comparison status
+
+Each generated signal now includes a `comparison_status` field describing what the current schema can establish:
+
+- `not_assessed`: no prior observation was supplied, so no period-to-period comparison was assessed.
+- `caution`: a prior observation exists, but the comparison has a detected caveat, such as overlapping periods, changed region/source, or missing coverage/comparability metadata.
+- `no_known_mismatch`: no mismatch was detected in the available period, region and source fields.
+
+`no_known_mismatch` does **not** mean the datasets are proven equivalent. The schema does not capture all important comparability factors, such as patient mix, testing indications, laboratory implementation, and other unrecorded factors. Optional specimen type, testing criteria, and laboratory method fields are supported when source data provides them. These statuses are transparency aids, not calibrated confidence scores or clinical recommendations.
+
+
+### AMR observation comparability safeguards
+
+The canonical aggregated-observation CSV schema accepts optional `specimen_type`, `testing_criteria`, and `laboratory_method` columns. The source-normalization helper accepts corresponding `SPECIMEN_TYPE`, `TESTING_CRITERIA`, and `LABORATORY_METHOD` fields by default, with column names configurable for source-specific exports. Existing inputs remain valid when these fields are absent; missing values remain unknown and are not inferred. Signal comparisons warn when these fields are missing or populated values differ after case-insensitive, surrounding-whitespace normalization; original labels are preserved for display. Region and source mismatch checks use the same normalization. These checks only cover metadata supplied by the source and do not establish full epidemiological comparability. Population mix, testing indications, laboratory implementation, and other unrecorded factors may still differ.
+
+
+
+### Alert threshold units and sample-size safeguards
+
+The `alert_change` parameter is an absolute difference between resistance proportions: `0.10` means a 10-percentage-point increase (for example, 20% to 30%), not a 10% relative increase. Trend explanations report absolute changes in percentage points. The default threshold remains a configurable research heuristic, not a validated epidemiological threshold.
+
+The minimum-sample safeguard applies to both periods when deciding whether a period-to-period change can trigger a `watch` alert. If the previous observation is below the configured minimum, BioSignal retains the descriptive rate difference but adds a caveat and does not use that change alone to trigger a watch. The current-period sample-size rule remains separate. These simple safeguards do not replace statistical uncertainty estimates or surveillance-design review.
+
+
+### Region-specific time series and quality-score naming
+
+The pipeline groups observations by normalized organism, antimicrobial, and region. It compares periods only within the same group; it does **not** pair a north-region observation with a south-region observation and then emit a region-change warning. Each region starts its own series. The direct `compare_periods` / `detect_amr_signal` path can flag a region mismatch if a caller explicitly supplies a cross-region pair. A lack of a mismatch warning in the grouped pipeline is therefore not evidence that different regions were compared.
+
+The quality assessment exposes `data_quality_score` and `data_quality_label`. The score is an uncalibrated engineering heuristic based on sample size, metadata completeness, and observation-window length. It is not statistical confidence, a probability, or a measure of clinical validity. The former `confidence_score` and `label` attributes remain temporarily as compatibility aliases and emit Python `DeprecationWarning` messages; downstream consumers should migrate to the explicitly named fields. Labels now use `higher_data_quality_score`, `moderate_data_quality_score`, and `limited_data_quality_score`.
+
+
+## Scientific validation status and release gate
+
+The rate thresholds and data-quality score are uncalibrated research heuristics. Signals now include Wilson 95% intervals for the current and previous resistance proportions; these describe binomial sampling uncertainty only and do not prove representativeness, comparability, or a statistically significant change. They are not confidence scores for the signal, and no probability of an alert being correct is produced. The intervals are not an interval for the between-period difference.
+
+Genuine calibration and out-of-sample validation require representative, outcome-labelled surveillance data and a pre-specified independent holdout. Synthetic tests cannot establish scientific validity. See [the scientific validation plan](docs/scientific-validation-plan.md) for data requirements, an evaluation protocol, uncertainty limits, and the release gate. Until that work is completed, do not describe watch signals as validated epidemiological alerts or use them alone for clinical or public-health decisions.
+
+
+## Scientific calibration and out-of-sample validation
+
+BioSignal now has a leakage-aware evaluation harness in `src/biosignal/calibration.py`. It validates independent reference-label provenance, splits records chronologically, selects thresholds on development records only, evaluates frozen thresholds on an untouched holdout, reports operating metrics with denominators and Wilson intervals, and supports AUROC to assess the heuristic data-quality score against independent expert labels.
+
+Start with the empty [calibration CSV schema](data/examples/calibration_template.csv), the [scientific validation plan](docs/scientific-validation-plan.md), and the `scripts/evaluate_amr_thresholds.py` CLI. Example chronological evaluation: `python scripts/evaluate_amr_thresholds.py data/your_reviewed_labels.csv --holdout-start 2024-01-01`. Example external-unit evaluation: `python scripts/evaluate_amr_thresholds.py data/your_reviewed_labels.csv --holdout-units site-17,site-21`. The template intentionally contains no invented outcomes; required fields record dataset release, coverage notes, reference label source/protocol, and surveillance unit. Candidate sources include WHO GLASS and ECDC EARS-Net; dataset-specific coverage, denominators, sampling, and comparability must be checked before use. No external cohort has been ingested or scientifically evaluated yet, so no calibration or out-of-sample performance claim is made.
+
+
+## WHO GLASS dashboard export audit
+
+For the WHO GLASS dashboard CSVs that include both chart summaries and country-level rows, use the importer/auditor. It reads only the `Data for line plots for individual CTAs` table, checks denominators, percentages, duplicate country-year keys, and filter consistency, then reports descriptive pooled rates and panel completeness.
+
+```bash
+python scripts/audit_who_glass_export.py path/to/who-glass-resistance-export.csv
+python scripts/audit_who_glass_export.py path/to/who-glass-resistance-export.csv --normalized-csv /tmp/who-glass-country-years.csv
+```
+
+A successful structural audit is not scientific validation. Pooled rates are not global population estimates, and the current WHO GLASS pilot exports do not provide independent quality labels. See [the WHO GLASS validation protocol](docs/who-glass-validation-protocol.md) and [the initial exploratory report](docs/initial-who-glass-exploratory-evaluation.md). Raw user-provided CSVs are not committed to this repository.

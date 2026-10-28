@@ -18,6 +18,9 @@ class AMRObservation:
     resistant_count: int
     region: Optional[str] = None
     source: Optional[str] = None
+    specimen_type: Optional[str] = None
+    testing_criteria: Optional[str] = None
+    laboratory_method: Optional[str] = None
 
     def __post_init__(self) -> None:
         if self.tested_count <= 0:
