@@ -218,3 +218,15 @@ Genuine calibration and out-of-sample validation require representative, outcome
 BioSignal now has a leakage-aware evaluation harness in `src/biosignal/calibration.py`. It validates independent reference-label provenance, splits records chronologically, selects thresholds on development records only, evaluates frozen thresholds on an untouched holdout, reports operating metrics with denominators and Wilson intervals, and supports AUROC to assess the heuristic data-quality score against independent expert labels.
 
 Start with the empty [calibration CSV schema](data/examples/calibration_template.csv), the [scientific validation plan](docs/scientific-validation-plan.md), and the `scripts/evaluate_amr_thresholds.py` CLI. Example chronological evaluation: `python scripts/evaluate_amr_thresholds.py data/your_reviewed_labels.csv --holdout-start 2024-01-01`. Example external-unit evaluation: `python scripts/evaluate_amr_thresholds.py data/your_reviewed_labels.csv --holdout-units site-17,site-21`. The template intentionally contains no invented outcomes; required fields record dataset release, coverage notes, reference label source/protocol, and surveillance unit. Candidate sources include WHO GLASS and ECDC EARS-Net; dataset-specific coverage, denominators, sampling, and comparability must be checked before use. No external cohort has been ingested or scientifically evaluated yet, so no calibration or out-of-sample performance claim is made.
+
+
+## WHO GLASS dashboard export audit
+
+For the WHO GLASS dashboard CSVs that include both chart summaries and country-level rows, use the importer/auditor. It reads only the `Data for line plots for individual CTAs` table, checks denominators, percentages, duplicate country-year keys, and filter consistency, then reports descriptive pooled rates and panel completeness.
+
+```bash
+python scripts/audit_who_glass_export.py path/to/who-glass-resistance-export.csv
+python scripts/audit_who_glass_export.py path/to/who-glass-resistance-export.csv --normalized-csv /tmp/who-glass-country-years.csv
+```
+
+A successful structural audit is not scientific validation. Pooled rates are not global population estimates, and the current WHO GLASS pilot exports do not provide independent quality labels. See [the WHO GLASS validation protocol](docs/who-glass-validation-protocol.md) and [the initial exploratory report](docs/initial-who-glass-exploratory-evaluation.md). Raw user-provided CSVs are not committed to this repository.
