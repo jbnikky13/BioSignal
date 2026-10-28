@@ -102,6 +102,7 @@ def parse_who_glass_export(text: str) -> tuple[dict[str, str], list[dict[str, An
 
     # Filters should agree with the data rows when specific values were selected.
     for filter_name, column in (
+        ("Region filter", "WHORegionName"),
         ("Infection type filter", "Specimen"),
         ("Bacterial pathogen filter", "PathogenName"),
         ("Antibiotic filter", "AbTargets"),
@@ -110,10 +111,9 @@ def parse_who_glass_export(text: str) -> tuple[dict[str, str], list[dict[str, An
         if value and value.lower() not in {"all", "all available"}:
             observed = {str(row[column]).lower() for row in rows}
             expected = value.lower()
-            # The dashboard uses "Bloodstream" as the label for the BLOOD specimen.
-            if filter_name == "Infection type filter" and expected == "bloodstream":
-                continue
-            if observed != {expected}:
+            # The dashboard labels BLOOD specimens as "Bloodstream" in its filters.
+            expected_values = {"blood"} if filter_name == "Infection type filter" and expected == "bloodstream" else {expected}
+            if observed != expected_values:
                 raise ValueError(
                     f"{filter_name} says {value!r}, but country-level rows contain {sorted(observed)!r}"
                 )
