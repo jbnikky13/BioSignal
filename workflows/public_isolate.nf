@@ -75,16 +75,18 @@ process AMRFINDERPLUS {
       export PATH="\$MAMBA_ROOT_PREFIX/envs/biosignal/bin:\$PATH"
     fi
     command -v amrfinder
-    amrfinder --version
-    amrfinder --database_version
+    {
+      echo "AMRFinderPlus executable: \$(command -v amrfinder)"
+      amrfinder --version
+      amrfinder --database_version
+    } > tool_versions.txt 2>&1
     fasta=\$(find dataset -name '*_genomic.fna' -type f -print -quit)
     test -n "\$fasta"
     test -s "\$fasta"
     {
       echo "AMRFinderPlus diagnostics"
       echo "Executable: \$(command -v amrfinder)"
-      amrfinder --version
-      amrfinder --database_version
+      cat tool_versions.txt
       echo "FASTA: \$fasta"
       echo "--- command ---"
       echo "amrfinder --plus -n \$fasta -O \${params.amrfinder_organism} --print_node"
