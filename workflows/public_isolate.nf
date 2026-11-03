@@ -86,10 +86,10 @@ process AMRFINDERPLUS {
       echo "Executable: \$(command -v amrfinder)"
       cat tool_versions.txt
       echo "Staged input files:"
-      find . -maxdepth 6 -type f -print | sort
+      find -L . -maxdepth 6 -type f -print | sort
     } > amrfinderplus.log 2>&1
 
-    fasta=\$(find . -type f -name '*_genomic.fna' -print -quit)
+    fasta=\$(find -L . -type f -name '*_genomic.fna' -print -quit)
     if [[ -z "\$fasta" ]]; then
       echo "ERROR: No NCBI genomic FASTA was found in the staged input directory." | tee -a amrfinderplus.log >&2
       exit 2
