@@ -32,10 +32,10 @@ process DOWNLOAD_GENOME {
     set -Eeuo pipefail
     assembly=\$(tr -d '[:space:]' < ${assembly_accession_file})
     test -n "\$assembly"
-    case "\$assembly" in
-      GCA_[0-9]+\.[0-9]*|GCF_[0-9]+\.[0-9]*) ;;
-      *) echo "Invalid NCBI assembly accession: \$assembly" >&2; exit 1 ;;
-    esac
+    if [[ ! "\$assembly" =~ ^(GCA|GCF)_[0-9]+\\.[0-9]+$ ]]; then
+      echo "Invalid NCBI assembly accession: \$assembly" >&2
+      exit 1
+    fi
     echo "Downloading NCBI assembly: \$assembly"
     datasets version
     datasets summary genome accession "\$assembly" --as-json-lines > assembly_summary.jsonl
