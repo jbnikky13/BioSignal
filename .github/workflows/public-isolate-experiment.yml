@@ -151,6 +151,7 @@ jobs:
         with:
           name: biosignal-${{ inputs.biosample }}-experiment
           if-no-files-found: warn
+          include-hidden-files: true
           path: |
             results/**
             nextflow-report.html
@@ -160,5 +161,7 @@ jobs:
             **/assembly_manifest.json
             **/amrfinderplus.log
             .nextflow.log
+            work/**/.command.sh
             work/**/.command.err
             work/**/.command.log
+            work/**/.command.out
