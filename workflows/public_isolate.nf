@@ -101,7 +101,7 @@ process AMRFINDERPLUS {
     {
       echo "FASTA: \$fasta"
       echo "--- command ---"
-      echo "amrfinder --plus -n \$fasta -O \${params.amrfinder_organism} --print_node"
+      echo "AMRFinder command: amrfinder --plus -n <FASTA> --print_node"
       echo "--- output ---"
     } >> amrfinderplus.log 2>&1
     set +e
