@@ -80,18 +80,30 @@ process AMRFINDERPLUS {
       amrfinder --version
       amrfinder --database_version
     } > tool_versions.txt 2>&1
-    fasta=\$(find dataset -name '*_genomic.fna' -type f -print -quit)
-    test -n "\$fasta"
-    test -s "\$fasta"
     {
       echo "AMRFinderPlus diagnostics"
+      echo "Working directory: \$PWD"
       echo "Executable: \$(command -v amrfinder)"
       cat tool_versions.txt
+      echo "Staged input files:"
+      find . -maxdepth 6 -type f -print | sort
+    } > amrfinderplus.log 2>&1
+
+    fasta=\$(find . -type f -name '*_genomic.fna' -print -quit)
+    if [[ -z "\$fasta" ]]; then
+      echo "ERROR: No NCBI genomic FASTA was found in the staged input directory." | tee -a amrfinderplus.log >&2
+      exit 2
+    fi
+    if [[ ! -s "\$fasta" ]]; then
+      echo "ERROR: The staged genomic FASTA is empty: \$fasta" | tee -a amrfinderplus.log >&2
+      exit 2
+    fi
+    {
       echo "FASTA: \$fasta"
       echo "--- command ---"
       echo "amrfinder --plus -n \$fasta -O \${params.amrfinder_organism} --print_node"
       echo "--- output ---"
-    } > amrfinderplus.log 2>&1
+    } >> amrfinderplus.log 2>&1
     set +e
     amrfinder --plus -n "\$fasta" -O \${params.amrfinder_organism} --print_node -o amrfinderplus.tsv >> amrfinderplus.log 2>&1
     status=\$?
