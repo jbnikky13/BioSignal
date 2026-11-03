@@ -115,6 +115,7 @@ jobs:
           nextflow run workflows/public_isolate.nf \
             --biosample "$BIOSAMPLE" \
             --amrfinder_organism "$AMRFINDER_ORGANISM" \
+            --outdir stub-results \
             -stub-run \
             -ansi-log false
 
@@ -139,12 +140,7 @@ jobs:
               echo "::group::$f"
               cat "$f" || true
               echo "::endgroup::"
-            done < <(find work -name .command.err -size +0 -print0 2>/dev/null)
-            while IFS= read -r -d '' f; do
-              echo "::group::$f"
-              cat "$f" || true
-              echo "::endgroup::"
-            done < <(find work -name .command.log -size +0 -print0 2>/dev/null)
+            done < <(find work -type f \( -name .command.sh -o -name .command.err -o -name .command.log -o -name .command.out \) -print0 2>/dev/null)
           fi
           exit "$rc"
 
