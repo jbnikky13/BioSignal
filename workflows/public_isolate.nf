@@ -105,7 +105,7 @@ process AMRFINDERPLUS {
       echo "--- output ---"
     } >> amrfinderplus.log 2>&1
     set +e
-    amrfinder --plus -n "\$fasta" -O \${params.amrfinder_organism} --print_node -o amrfinderplus.tsv >> amrfinderplus.log 2>&1
+    amrfinder --plus -n "\$fasta" -O "\${params.amrfinder_organism}" --print_node -o amrfinderplus.tsv >> amrfinderplus.log 2>&1
     status=\$?
     set -e
     echo "AMRFinder exit status: \$status" >> amrfinderplus.log
