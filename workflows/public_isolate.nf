@@ -32,7 +32,7 @@ process DOWNLOAD_GENOME {
     set -Eeuo pipefail
     assembly=\$(tr -d '[:space:]' < ${assembly_accession_file})
     test -n "\$assembly"
-    if [[ ! "\$assembly" =~ ^(GCA|GCF)_[0-9]+\\.[0-9]+$ ]]; then
+    if [[ ! "\$assembly" =~ ^(GCA|GCF)_[0-9]+\\.[0-9]+\$ ]]; then
       echo "Invalid NCBI assembly accession: \$assembly" >&2
       exit 1
     fi
