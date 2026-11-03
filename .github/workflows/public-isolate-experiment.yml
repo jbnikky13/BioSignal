@@ -125,13 +125,19 @@ jobs:
           NCBI_API_KEY: ${{ secrets.NCBI_API_KEY }}
         run: |
           set -uo pipefail
-          nextflow run workflows/public_isolate.nf \
+          # Capture Nextflow's exit code in an if/else so the runner's
+          # inherited errexit cannot abort before output verification.
+          if nextflow run workflows/public_isolate.nf \
             --biosample "$BIOSAMPLE" \
             --amrfinder_organism "$AMRFINDER_ORGANISM" \
             -with-report nextflow-report.html \
             -with-trace nextflow-trace.txt \
-            -ansi-log false
-          nextflow_rc=$?
+            -ansi-log false; then
+            nextflow_rc=0
+          else
+            nextflow_rc=$?
+          fi
+          echo "Nextflow launcher exit status: $nextflow_rc"
 
           # A successful task trace and complete, non-empty outputs are the
           # acceptance criteria. Do not trust the launcher status alone.
