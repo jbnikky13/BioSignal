@@ -150,8 +150,8 @@ process AMRFINDERPLUS {
     cp "\$(find -L . -type f -name dataset_sha256.txt -print -quit)" dataset_sha256.txt
     cp "\$(find -L . -type f -name assembly_summary.jsonl -print -quit)" assembly_summary.jsonl
     {
-      echo "Nucleotide baseline data rows: \$(($(wc -l < amrfinderplus_nucleotide_baseline.tsv) - 1))"
-      echo "Combined data rows: \$(($(wc -l < amrfinderplus_combined.tsv) - 1))"
+      echo "Nucleotide baseline data rows: \$(awk 'END { print (NR > 0 ? NR - 1 : 0) }' amrfinderplus_nucleotide_baseline.tsv)"
+      echo "Combined data rows: \$(awk 'END { print (NR > 0 ? NR - 1 : 0) }' amrfinderplus_combined.tsv)"
       echo "Combined summary:"
       cat amrfinderplus_summary.md
     } >> amrfinderplus.log
