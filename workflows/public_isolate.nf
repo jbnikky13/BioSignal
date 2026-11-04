@@ -2,6 +2,7 @@ nextflow.enable.dsl=2
 
 params.biosample = "SAMN05215988"
 params.amrfinder_organism = "Escherichia"
+params.report_organism = "Escherichia coli"
 params.outdir = "results"
 params.python_executable = "python"
 
@@ -84,6 +85,8 @@ process AMRFINDERPLUS {
     path "amrfinderplus_combined.tsv"
     path "amrfinderplus_summary.md"
     path "amrfinderplus_evidence.json"
+    path "experiment_report.json"
+    path "experiment_report.md"
     path "tool_versions.txt"
     path "amrfinderplus.log"
     path "dataset_cli_version.txt"
@@ -151,6 +154,18 @@ process AMRFINDERPLUS {
       --report amrfinderplus_combined.tsv --output amrfinderplus_evidence.json \
       >> amrfinderplus.log 2>&1
     test -s amrfinderplus_evidence.json
+
+    "${params.python_executable}" -m biosignal.amrfinder_report build-experiment-report \
+      --evidence amrfinderplus_evidence.json \
+      --isolate-id "${params.biosample}" \
+      --organism "${params.report_organism}" \
+      --source "NCBI BioSample / AMRFinderPlus public-isolate workflow" \
+      --output-json experiment_report.json \
+      --output-markdown experiment_report.md \
+      >> amrfinderplus.log 2>&1
+    test -s experiment_report.json
+    test -s experiment_report.md
+
     cp "\$(find -L . -type f -name dataset_cli_version.txt -print -quit)" dataset_cli_version.txt
     cp "\$(find -L . -type f -name dataset_sha256.txt -print -quit)" dataset_sha256.txt
     cp "\$(find -L . -type f -name assembly_summary.jsonl -print -quit)" assembly_summary.jsonl
@@ -159,6 +174,8 @@ process AMRFINDERPLUS {
       echo "Combined data rows: \$(awk 'END { print (NR > 0 ? NR - 1 : 0) }' amrfinderplus_combined.tsv)"
       echo "Combined summary:"
       cat amrfinderplus_summary.md
+      echo "Unified experiment report:"
+      cat experiment_report.md
     } >> amrfinderplus.log
     """
     stub:
@@ -167,6 +184,8 @@ process AMRFINDERPLUS {
     printf "Element symbol\\tScope\\tType\\tMethod\\n" > amrfinderplus_combined.tsv
     echo "# Stub only — no biological analysis was performed." > amrfinderplus_summary.md
     echo '{"schema_version":"1.0","source":"AMRFinderPlus","row_count":0,"amr_typed_rows":0,"scope_counts":{},"type_counts":{},"review_flag_rows":0,"detections":[],"interpretation":"Stub only; no biological analysis was performed."}' > amrfinderplus_evidence.json
+    echo '{"schema_version":"1.0","report_type":"research_evidence_summary","isolate_id":"STUB","organism":"STUB","source":"Nextflow stub","amr_hits":[],"genomic_detections":[],"comparisons":[],"limitations":["Stub only — no biological analysis was performed"],"interpretation":"Stub only — no biological analysis was performed."}' > experiment_report.json
+    echo "# Stub only — no biological analysis was performed." > experiment_report.md
     echo "stub" > tool_versions.txt
     echo "stub" > amrfinderplus.log
     echo "stub" > dataset_cli_version.txt

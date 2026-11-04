@@ -32,6 +32,66 @@ class ExperimentReport:
     genomic_detections: tuple[AMRHit, ...] = ()
 
 
+def hits_from_evidence_payload(payload: dict) -> list[AMRHit]:
+    """Rehydrate AMRFinderPlus JSON while validating its row-level evidence."""
+    if payload.get("source") != "AMRFinderPlus":
+        raise ValueError("Evidence JSON source must be AMRFinderPlus")
+    detections = payload.get("detections")
+    if not isinstance(detections, list):
+        raise ValueError("Evidence JSON must contain a detections list")
+    if payload.get("row_count") != len(detections):
+        raise ValueError("Evidence JSON row_count does not match detections length")
+
+    hits: list[AMRHit] = []
+    for index, item in enumerate(detections):
+        if not isinstance(item, dict):
+            raise ValueError(f"Detection {index} must be an object")
+        gene = item.get("gene_symbol")
+        if not isinstance(gene, str) or not gene.strip():
+            raise ValueError(f"Detection {index} has no gene_symbol")
+        reasons = item.get("review_reasons") or []
+        if not isinstance(reasons, list) or not all(isinstance(reason, str) for reason in reasons):
+            raise ValueError(f"Detection {index} has invalid review_reasons")
+        review_required = bool(item.get("review_required", False))
+        if review_required != bool(reasons):
+            raise ValueError(f"Detection {index} review flag/reasons are inconsistent")
+        hits.append(AMRHit(
+            sequence_id=item.get("sequence_id"),
+            gene_symbol=gene.strip(),
+            element_type=str(item.get("element_type") or "UNKNOWN").upper(),
+            method=str(item.get("method") or "UNKNOWN").upper(),
+            reference=item.get("reference"),
+            coverage=item.get("coverage"),
+            identity=item.get("identity"),
+            source=str(item.get("source") or "AMRFinderPlus"),
+            scope=str(item.get("scope") or "unknown").lower(),
+            element_name=item.get("element_name"),
+            subtype=item.get("subtype"),
+            class_name=item.get("class_name"),
+            subclass=item.get("subclass"),
+            contig_id=item.get("contig_id"),
+            start=item.get("start"),
+            stop=item.get("stop"),
+            review_required=review_required,
+            review_reasons=tuple(reasons),
+        ))
+    amr_count = sum(hit.is_amr_typed for hit in hits)
+    if payload.get("amr_typed_rows") != amr_count:
+        raise ValueError("Evidence JSON amr_typed_rows does not match detection types")
+    if payload.get("review_flag_rows") != sum(hit.review_required for hit in hits):
+        raise ValueError("Evidence JSON review_flag_rows does not match detection flags")
+    scope_counts: dict[str, int] = {}
+    type_counts: dict[str, int] = {}
+    for hit in hits:
+        scope_counts[hit.scope] = scope_counts.get(hit.scope, 0) + 1
+        type_counts[hit.element_type] = type_counts.get(hit.element_type, 0) + 1
+    if payload.get("scope_counts") != scope_counts:
+        raise ValueError("Evidence JSON scope_counts do not match detection scopes")
+    if payload.get("type_counts") != type_counts:
+        raise ValueError("Evidence JSON type_counts do not match detection types")
+    return hits
+
+
 def build_report(
     isolate_id: str,
     organism: str,
@@ -40,7 +100,7 @@ def build_report(
     *,
     source: str,
 ) -> ExperimentReport:
-    # Do not present virulence/stress Plus hits as AMR determinants.
+    # Only rows explicitly typed AMR belong in the AMR-hit list.
     amr_names = tuple(sorted({hit.gene_symbol for hit in hits if hit.gene_symbol and hit.is_amr_typed}))
 
     # AMRObservation is an aggregate count model and has no isolate key. Therefore
@@ -70,9 +130,11 @@ def build_report(
         limitations=(
             "AMRFinderPlus detections are genomic evidence and do not establish phenotypic resistance, expression, or treatment response",
             "Core and Plus scopes are distinct; Plus detections are not automatically clinically relevant resistance determinants",
-            "virulence and stress detections are not AMR detections and are excluded from the AMR hit list",
-            "aggregate AST observations cannot establish this isolate's phenotype",
-            "genotype-phenotype concordance requires verified matching isolate identifiers and compatible antimicrobial evidence",
+            "Virulence and stress detections are genomic findings, not AMR detections, and are excluded from the AMR hit list",
+            "Aggregate AST observations cannot establish this isolate's phenotype",
+            "Genotype-phenotype concordance requires verified matching isolate identifiers and compatible antimicrobial evidence",
+            "Rows flagged for manual review must not be treated as confirmed findings until sequence and genomic context are reviewed",
+            "This research report is not a clinical or diagnostic interpretation",
         ),
         genomic_detections=tuple(hits),
     )
@@ -80,15 +142,35 @@ def build_report(
 
 def to_dict(report: ExperimentReport) -> dict:
     """Serialize a report without collapsing scope, element type or review flags."""
+    scope_counts: dict[str, int] = {}
+    type_counts: dict[str, int] = {}
+    for hit in report.genomic_detections:
+        scope_counts[hit.scope] = scope_counts.get(hit.scope, 0) + 1
+        type_counts[hit.element_type] = type_counts.get(hit.element_type, 0) + 1
     return {
+        "schema_version": "1.0",
+        "report_type": "research_evidence_summary",
+        "summary": {
+            "row_count": len(report.genomic_detections),
+            "amr_typed_rows": sum(hit.is_amr_typed for hit in report.genomic_detections),
+            "scope_counts": dict(sorted(scope_counts.items())),
+            "type_counts": dict(sorted(type_counts.items())),
+            "review_flag_rows": sum(hit.review_required for hit in report.genomic_detections),
+        },
         "isolate_id": report.isolate_id,
         "organism": report.organism,
         "source": report.source,
         "amr_hits": list(report.amr_hits),
         "genomic_detections": [
             {
+                "sequence_id": hit.sequence_id,
                 "gene_symbol": hit.gene_symbol,
+                "element_name": hit.element_name,
                 "element_type": hit.element_type,
+                "subtype": hit.subtype,
+                "class_name": hit.class_name,
+                "subclass": hit.subclass,
+                "source": hit.source,
                 "scope": hit.scope,
                 "method": hit.method,
                 "reference": hit.reference,
@@ -99,6 +181,7 @@ def to_dict(report: ExperimentReport) -> dict:
                 "stop": hit.stop,
                 "review_required": hit.review_required,
                 "review_reasons": list(hit.review_reasons),
+                "is_amr_typed": hit.is_amr_typed,
             }
             for hit in report.genomic_detections
         ],
@@ -115,4 +198,73 @@ def to_dict(report: ExperimentReport) -> dict:
             for item in report.comparisons
         ],
         "limitations": list(report.limitations),
+        "interpretation": (
+            "Research evidence summary only. Genomic detections do not confirm phenotypic "
+            "resistance, gene expression, or treatment response."
+        ),
     }
+
+
+def render_markdown(report: ExperimentReport) -> str:
+    """Render a readable report without flattening evidence categories."""
+    lines = [
+        "# BioSignal — Public Isolate Evidence Report",
+        "",
+        f"- **Isolate:** {report.isolate_id}",
+        f"- **Organism:** {report.organism}",
+        f"- **Source:** {report.source}",
+        "- **Report status:** Research evidence summary; not a clinical or diagnostic interpretation",
+        "",
+        "## AMR-typed genomic detections",
+        "",
+    ]
+    if report.amr_hits:
+        lines.extend(f"- {name}" for name in report.amr_hits)
+    else:
+        lines.append("No AMRFinderPlus rows explicitly typed AMR were reported.")
+
+    lines.extend([
+        "",
+        "## All genomic detections",
+        "",
+        "| Gene/element | Type | Scope | Method | Reference | Coverage | Identity | Contig | Coordinates | Review required | Review reason(s) |",
+        "|---|---|---|---|---|---:|---:|---|---|---|---|",
+    ])
+    for hit in report.genomic_detections:
+        reasons = ", ".join(hit.review_reasons) or "—"
+        review = "Yes" if hit.review_required else "No"
+        coverage = f"{hit.coverage:g}%" if hit.coverage is not None else "Unavailable"
+        identity = f"{hit.identity:g}%" if hit.identity is not None else "Unavailable"
+        coordinates = (
+            f"{hit.start or '—'}–{hit.stop or '—'}"
+            if hit.start is not None or hit.stop is not None else "Unavailable"
+        )
+        lines.append(
+            f"| {hit.gene_symbol} | {hit.element_type} | {hit.scope} | {hit.method} | "
+            f"{hit.reference or 'Unavailable'} | {coverage} | {identity} | "
+            f"{hit.contig_id or 'Unavailable'} | {coordinates} | {review} | {reasons} |"
+        )
+    if not report.genomic_detections:
+        lines.append("| None | — | — | — | — | — | — | — | — | — | — |")
+
+    lines.extend(["", "## Phenotype observations", ""])
+    if report.comparisons:
+        lines.extend([
+            "| Antimicrobial | Evidence level | Resistance proportion | Tested | Resistant | Interpretation |",
+            "|---|---|---:|---:|---:|---|",
+        ])
+        for item in report.comparisons:
+            lines.append(
+                f"| {item.antimicrobial} | Aggregate only | {item.resistance_rate:.1%} | "
+                f"{item.tested_count} | {item.resistant_count} | {item.interpretation} |"
+            )
+    else:
+        lines.append(
+            "No AST phenotype observations were supplied to this report. "
+            "No isolate-level susceptible/resistant phenotype is assigned."
+        )
+
+    lines.extend(["", "## Interpretation limits", ""])
+    lines.extend(f"- {item}" for item in report.limitations)
+    lines.append("")
+    return "\n".join(lines)

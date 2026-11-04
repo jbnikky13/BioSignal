@@ -12,7 +12,7 @@ _MISSING_VALUES = {"", ".", "NA", "N/A", "NULL", "NONE"}
 
 @dataclass(frozen=True)
 class AMRHit:
-    sequence_id: str
+    sequence_id: str | None
     gene_symbol: str
     element_type: str
     method: str
@@ -44,7 +44,7 @@ def parse_amrfinder_rows(rows: list[dict[str, str]]) -> list[AMRHit]:
         method = _first(row, "Method", "method").strip().upper() or "UNKNOWN"
         reasons = (method,) if method in _REVIEW_METHODS else ()
         hits.append(AMRHit(
-            sequence_id=_first(row, "Protein id", "Protein identifier", "Contig id"),
+            sequence_id=_optional(_first(row, "Protein id", "Protein identifier", "Contig id")),
             gene_symbol=_first(row, "Element symbol", "element_symbol"),
             element_type=_first(row, "Type", "type").strip().upper() or "UNKNOWN",
             method=method,

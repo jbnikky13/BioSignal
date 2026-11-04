@@ -52,3 +52,17 @@ Rows with methods `INTERNAL_STOP`, `PARTIAL`, or `PARTIAL_CONTIG_END` carry an e
 Only rows explicitly typed `AMR` are included in the report's AMR-hit list. Plus-scope virulence and stress findings remain visible as genomic detections but are not mislabeled as AMR hits. The live workflow also writes `amrfinderplus_evidence.json` through the same normalized parser. It retains each detection's scope, type, method, reference accession, identity, coverage, genomic location, and review flags; the workflow validator checks row counts and review-flag consistency.
 
 Aggregated AST observations are never converted into an individual isolate's resistant/susceptible phenotype. They are reported as aggregate resistance proportions only. No genotype-phenotype linkage is made unless compatible isolate-level identifiers and evidence are available and verified. A gene or mutation detection is never presented as confirmed phenotypic resistance.
+
+
+## Unified downstream experiment report
+
+The live public-isolate workflow now consumes `amrfinderplus_evidence.json` through the validated evidence loader and emits two additional artifacts:
+
+- `experiment_report.json`: structured research report with AMR-typed hits, all genomic detections, per-row scope/type/method/location/review metadata, and explicit interpretation limits.
+- `experiment_report.md`: readable report with AMR-typed findings separated from the full genomic detection table, review-required rows identified, and a clear statement when no isolate-level AST observations were supplied.
+
+The loader checks the detection count, AMR-typed count, scope/type counts, and review-flag count against the row-level records. It rejects inconsistent evidence rather than silently producing a report. Missing identifiers and metrics remain null/unavailable.
+
+Only records whose AMRFinderPlus `Type` is explicitly `AMR` enter the AMR-hit list or genotype/phenotype evidence summary. `VIRULENCE` and `STRESS` detections remain visible in the complete genomic evidence table but are excluded from AMR linkage. Aggregate AST data, when supplied, remains labelled aggregate-only and is never assigned as an individual isolate phenotype. No AST phenotype observations are currently passed by the public-isolate workflow, so the unified report explicitly states that none were supplied.
+
+The unified report is a research evidence summary, not a clinical or diagnostic interpretation. Genomic detections do not confirm phenotypic resistance, expression, or treatment response; rows marked for manual review require sequence/context review.
