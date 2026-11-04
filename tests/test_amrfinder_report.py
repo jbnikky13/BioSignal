@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.amrfinder_report import summarize_report, validate_inputs
+from biosignal.amrfinder_report import summarize_report, validate_inputs
 
 
 def test_validate_inputs_requires_matching_gff_protein_ids(tmp_path: Path):
