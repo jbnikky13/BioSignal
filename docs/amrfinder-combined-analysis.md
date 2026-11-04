@@ -43,3 +43,12 @@ The software is pinned to AMRFinderPlus 4.2.7 in the GitHub Actions workflow. Th
 The live workflow is accepted only when all Nextflow processes exit successfully, both reports are non-empty and have the expected columns, the assembly manifest matches the requested BioSample, the provenance files exist, and the interpretation summary contains the scientific caveats.
 
 The smoke test exercises both nucleotide-only and combined command modes using NCBI's own test input files. It does not replace the live public-isolate run. A successful stub workflow is only a graph/compile check; it is not a biological analysis.
+## Downstream ingestion and reporting safeguards
+
+The Python ingestion layer preserves the AMRFinderPlus `Scope` field (`core`, `plus`, or explicit `unknown`) separately from `Type` (for example, `AMR`, `VIRULENCE`, or `STRESS`). It accepts the current TSV headers (`Protein id`, `Closest reference accession`, `% Coverage of reference`, and `% Identity to reference`) as well as legacy aliases. Coordinates, contig, reference accession, method, identity, coverage, and review state are retained in normalized evidence.
+
+Rows with methods `INTERNAL_STOP`, `PARTIAL`, or `PARTIAL_CONTIG_END` carry an explicit manual-review flag and reason. Rows are not deduplicated by element symbol; distinct loci remain distinct evidence records.
+
+Only rows explicitly typed `AMR` are included in the report's AMR-hit list. Plus-scope virulence and stress findings remain visible as genomic detections but are not mislabeled as AMR hits. The report serializer retains each detection's scope, type, method, genomic location, and review flags.
+
+Aggregated AST observations are never converted into an individual isolate's resistant/susceptible phenotype. They are reported as aggregate resistance proportions only. No genotype-phenotype linkage is made unless compatible isolate-level identifiers and evidence are available and verified. A gene or mutation detection is never presented as confirmed phenotypic resistance.
