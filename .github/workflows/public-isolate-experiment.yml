@@ -93,6 +93,8 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install .
           python -m pip install "pytest>=8.0"
+          python -c 'import sys; print(f"BIOSIGNAL_PYTHON={sys.executable}")' >> "$GITHUB_ENV"
+          echo "BioSignal task interpreter: $(python -c 'import sys; print(sys.executable)')"
           pytest -q
 
       - name: AMRFinder nucleotide smoke test
@@ -115,6 +117,7 @@ jobs:
           nextflow run workflows/public_isolate.nf \
             --biosample "$BIOSAMPLE" \
             --amrfinder_organism "$AMRFINDER_ORGANISM" \
+            --python_executable "$BIOSIGNAL_PYTHON" \
             --outdir stub-results \
             -stub-run \
             -ansi-log false
@@ -132,6 +135,7 @@ jobs:
           if nextflow run workflows/public_isolate.nf \
             --biosample "$BIOSAMPLE" \
             --amrfinder_organism "$AMRFINDER_ORGANISM" \
+            --python_executable "$BIOSIGNAL_PYTHON" \
             -with-report nextflow-report.html \
             -with-trace nextflow-trace.txt \
             -ansi-log false; then
