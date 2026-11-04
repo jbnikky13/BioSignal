@@ -142,9 +142,21 @@ def build_report(
 
 def to_dict(report: ExperimentReport) -> dict:
     """Serialize a report without collapsing scope, element type or review flags."""
+    scope_counts: dict[str, int] = {}
+    type_counts: dict[str, int] = {}
+    for hit in report.genomic_detections:
+        scope_counts[hit.scope] = scope_counts.get(hit.scope, 0) + 1
+        type_counts[hit.element_type] = type_counts.get(hit.element_type, 0) + 1
     return {
         "schema_version": "1.0",
         "report_type": "research_evidence_summary",
+        "summary": {
+            "row_count": len(report.genomic_detections),
+            "amr_typed_rows": sum(hit.is_amr_typed for hit in report.genomic_detections),
+            "scope_counts": dict(sorted(scope_counts.items())),
+            "type_counts": dict(sorted(type_counts.items())),
+            "review_flag_rows": sum(hit.review_required for hit in report.genomic_detections),
+        },
         "isolate_id": report.isolate_id,
         "organism": report.organism,
         "source": report.source,
@@ -153,7 +165,12 @@ def to_dict(report: ExperimentReport) -> dict:
             {
                 "sequence_id": hit.sequence_id,
                 "gene_symbol": hit.gene_symbol,
+                "element_name": hit.element_name,
                 "element_type": hit.element_type,
+                "subtype": hit.subtype,
+                "class_name": hit.class_name,
+                "subclass": hit.subclass,
+                "source": hit.source,
                 "scope": hit.scope,
                 "method": hit.method,
                 "reference": hit.reference,
@@ -210,18 +227,25 @@ def render_markdown(report: ExperimentReport) -> str:
         "",
         "## All genomic detections",
         "",
-        "| Gene/element | Type | Scope | Method | Review required | Review reason(s) |",
-        "|---|---|---|---|---|---|",
+        "| Gene/element | Type | Scope | Method | Reference | Coverage | Identity | Contig | Coordinates | Review required | Review reason(s) |",
+        "|---|---|---|---|---|---:|---:|---|---|---|---|",
     ])
     for hit in report.genomic_detections:
         reasons = ", ".join(hit.review_reasons) or "—"
         review = "Yes" if hit.review_required else "No"
+        coverage = f"{hit.coverage:g}%" if hit.coverage is not None else "Unavailable"
+        identity = f"{hit.identity:g}%" if hit.identity is not None else "Unavailable"
+        coordinates = (
+            f"{hit.start or '—'}–{hit.stop or '—'}"
+            if hit.start is not None or hit.stop is not None else "Unavailable"
+        )
         lines.append(
-            f"| {hit.gene_symbol} | {hit.element_type} | {hit.scope} | "
-            f"{hit.method} | {review} | {reasons} |"
+            f"| {hit.gene_symbol} | {hit.element_type} | {hit.scope} | {hit.method} | "
+            f"{hit.reference or 'Unavailable'} | {coverage} | {identity} | "
+            f"{hit.contig_id or 'Unavailable'} | {coordinates} | {review} | {reasons} |"
         )
     if not report.genomic_detections:
-        lines.append("| None | — | — | — | — | — |")
+        lines.append("| None | — | — | — | — | — | — | — | — | — | — |")
 
     lines.extend(["", "## Phenotype observations", ""])
     if report.comparisons:
