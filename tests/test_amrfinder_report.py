@@ -56,7 +56,7 @@ def test_summary_accepts_header_only_report_as_zero_hits(tmp_path: Path):
     report = tmp_path / "empty.tsv"
     output = tmp_path / "summary.md"
     report.write_text(
-        "Element symbol\\tScope\\tType\\tMethod\\n",
+        "Element symbol\tScope\tType\tMethod\n",
         encoding="utf-8",
     )
     result = summarize_report(report, output)
