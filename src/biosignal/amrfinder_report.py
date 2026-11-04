@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-"""Validate NCBI genome annotation inputs and summarize AMRFinderPlus TSV output."""
+"""Validation and transparent summaries for AMRFinderPlus evidence."""
 from __future__ import annotations
 
 import argparse
@@ -10,21 +9,21 @@ from urllib.parse import unquote
 
 
 def fasta_ids(path: Path) -> set[str]:
-    ids = set()
+    identifiers = set()
     with path.open(encoding="utf-8") as handle:
         for line in handle:
             if line.startswith(">"):
-                ids.add(line[1:].strip().split()[0])
-    if not ids:
+                identifiers.add(line[1:].strip().split()[0])
+    if not identifiers:
         raise ValueError(f"No FASTA records found: {path}")
-    return ids
+    return identifiers
 
 
 def validate_inputs(nucleotide: Path, protein: Path, gff: Path) -> dict[str, int]:
     nucleotide_ids = fasta_ids(nucleotide)
     protein_ids = fasta_ids(protein)
-    gff_seqids: set[str] = set()
-    gff_protein_ids: set[str] = set()
+    gff_contigs: set[str] = set()
+    gff_proteins: set[str] = set()
     with gff.open(encoding="utf-8") as handle:
         for line_number, line in enumerate(handle, 1):
             if not line.strip() or line.startswith("#"):
@@ -34,27 +33,26 @@ def validate_inputs(nucleotide: Path, protein: Path, gff: Path) -> dict[str, int
                 raise ValueError(f"GFF line {line_number} has {len(fields)} columns, expected 9")
             if fields[2] not in {"CDS", "gene"}:
                 continue
-            gff_seqids.add(fields[0])
-            attrs = {}
+            gff_contigs.add(fields[0])
+            attributes = {}
             for item in fields[8].split(";"):
                 if "=" in item:
                     key, value = item.split("=", 1)
-                    attrs[key] = unquote(value)
-            if attrs.get("Name"):
-                gff_protein_ids.add(attrs["Name"])
-    if not gff_seqids:
+                    attributes[key] = unquote(value)
+            if attributes.get("Name"):
+                gff_proteins.add(attributes["Name"])
+    if not gff_contigs:
         raise ValueError("GFF contains no CDS/gene feature rows")
-    unknown_contigs = gff_seqids - nucleotide_ids
-    if unknown_contigs:
-        sample = sorted(unknown_contigs)[:5]
-        raise ValueError(f"GFF sequence IDs do not match nucleotide FASTA: {sample}")
-    matched = protein_ids & gff_protein_ids
+    unknown = gff_contigs - nucleotide_ids
+    if unknown:
+        raise ValueError(f"GFF sequence IDs do not match nucleotide FASTA: {sorted(unknown)[:5]}")
+    matched = protein_ids & gff_proteins
     if not matched:
         raise ValueError("No GFF Name= identifiers match protein FASTA record IDs")
     return {
         "nucleotide_contigs": len(nucleotide_ids),
         "protein_records": len(protein_ids),
-        "gff_feature_ids": len(gff_protein_ids),
+        "gff_feature_ids": len(gff_proteins),
         "matched_protein_ids": len(matched),
     }
 
@@ -66,17 +64,14 @@ def summarize_report(report: Path, output: Path) -> dict:
         if not reader.fieldnames or not required.issubset(reader.fieldnames):
             raise ValueError(f"AMRFinderPlus TSV missing required columns: {sorted(required)}")
         rows = list(reader)
-    if not rows:
-        raise ValueError("AMRFinderPlus report contains no data rows")
+
     scopes = Counter(row["Scope"] or "UNKNOWN" for row in rows)
     types = Counter(row["Type"] or "UNKNOWN" for row in rows)
     methods = Counter(row["Method"] or "UNKNOWN" for row in rows)
     symbols = Counter(row["Element symbol"] or "UNKNOWN" for row in rows)
-    caution_methods = {"INTERNAL_STOP", "PARTIAL", "PARTIAL_CONTIG_END"}
-    caution_rows = [
-        row for row in rows
-        if row["Method"] in caution_methods
-    ]
+    review_methods = {"INTERNAL_STOP", "PARTIAL", "PARTIAL_CONTIG_END"}
+    review_rows = [row for row in rows if row["Method"] in review_methods]
+
     lines = [
         "# AMRFinderPlus combined-analysis summary",
         "",
@@ -88,26 +83,41 @@ def summarize_report(report: Path, output: Path) -> dict:
         "| Scope | Rows |",
         "|---|---:|",
     ]
-    if rows:\n        lines.extend(f"| {key} | {value} |" for key, value in sorted(scopes.items()))\n    else:\n        lines.append("| None | 0 |")
-    lines += ["", "## Type counts", "", "| Type | Rows |", "|---|---:|"]
-    if rows:\n        lines.extend(f"| {key} | {value} |" for key, value in sorted(types.items()))\n    else:\n        lines.append("| None | 0 |")
-    lines += ["", "## Detection-method counts", "", "| Method | Rows |", "|---|---:|"]
-    if rows:\n        lines.extend(f"| {key} | {value} |" for key, value in sorted(methods.items()))\n    else:\n        lines.append("| None | 0 |")
-    lines += ["", "## Review flags", ""]
-    if caution_rows:
-        lines.append("The following rows use methods that warrant manual sequence/context review:")
-        lines.append("")
-        lines.append("| Element | Scope | Type | Method | Contig | Start | Stop |")
-        lines.append("|---|---|---|---|---|---:|---:|")
-        for row in caution_rows:
+    lines.extend(
+        f"| {key} | {value} |" for key, value in sorted(scopes.items())
+    ) if rows else lines.append("| None | 0 |")
+    lines.extend(["", "## Type counts", "", "| Type | Rows |", "|---|---:|"])
+    lines.extend(
+        f"| {key} | {value} |" for key, value in sorted(types.items())
+    ) if rows else lines.append("| None | 0 |")
+    lines.extend(["", "## Detection-method counts", "", "| Method | Rows |", "|---|---:|"])
+    lines.extend(
+        f"| {key} | {value} |" for key, value in sorted(methods.items())
+    ) if rows else lines.append("| None | 0 |")
+
+    lines.extend(["", "## Review flags", ""])
+    if review_rows:
+        lines.extend([
+            "The following rows warrant manual sequence/context review:",
+            "",
+            "| Element | Scope | Type | Method | Contig | Start | Stop |",
+            "|---|---|---|---|---|---:|---:|",
+        ])
+        for row in review_rows:
             lines.append(
                 f"| {row.get('Element symbol', '')} | {row.get('Scope', '')} | "
                 f"{row.get('Type', '')} | {row.get('Method', '')} | "
                 f"{row.get('Contig id', '')} | {row.get('Start', '')} | {row.get('Stop', '')} |"
             )
-    else:
+    elif rows:
         lines.append("No INTERNAL_STOP or partial-alignment methods were reported.")
-    lines += [
+    else:
+        lines.append(
+            "No elements were reported by AMRFinderPlus for this assembly. "
+            "This is a valid empty result, not evidence that the organism is universally susceptible."
+        )
+
+    lines.extend([
         "",
         "## Interpretation limits",
         "",
@@ -117,7 +127,7 @@ def summarize_report(report: Path, output: Path) -> dict:
         "- Method, identity, reference coverage, and genomic context should be reviewed before biological interpretation.",
         "- This is an automated evidence summary, not a clinical or diagnostic interpretation.",
         "",
-    ]
+    ])
     output.write_text("\n".join(lines), encoding="utf-8")
     return {
         "report_rows": len(rows),
@@ -125,7 +135,7 @@ def summarize_report(report: Path, output: Path) -> dict:
         "scope_counts": dict(sorted(scopes.items())),
         "type_counts": dict(sorted(types.items())),
         "method_counts": dict(sorted(methods.items())),
-        "review_flag_rows": len(caution_rows),
+        "review_flag_rows": len(review_rows),
     }
 
 
