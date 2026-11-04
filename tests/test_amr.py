@@ -54,3 +54,37 @@ def test_internal_stop_is_retained_as_manual_review_flag():
     assert hit.review_required is True
     assert hit.review_reasons == ("INTERNAL_STOP",)
     assert not hit.is_amr_typed
+
+
+def test_na_numeric_metrics_are_preserved_as_missing_values():
+    hit = parse_amrfinder_rows([{
+        "Protein id": "WP_003",
+        "Contig id": "contig1",
+        "Start": "NA",
+        "Stop": "N/A",
+        "Element symbol": "geneX",
+        "Scope": "plus",
+        "Type": "VIRULENCE",
+        "Method": "BLASTP",
+        "% Coverage of reference": "NA",
+        "% Identity to reference": ".",
+        "Closest reference accession": "NA",
+    }])[0]
+    assert hit.coverage is None
+    assert hit.identity is None
+    assert hit.start is None
+    assert hit.stop is None
+    assert hit.reference is None
+
+
+def test_numeric_metrics_still_parse_when_present():
+    hit = parse_amrfinder_rows([{
+        "% Coverage of reference": "100",
+        "% Identity to reference": "99.75",
+        "Start": "12",
+        "Stop": "345",
+    }])[0]
+    assert hit.coverage == 100.0
+    assert hit.identity == 99.75
+    assert hit.start == 12
+    assert hit.stop == 345
