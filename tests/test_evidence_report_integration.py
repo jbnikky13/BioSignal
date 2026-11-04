@@ -73,8 +73,9 @@ def test_json_evidence_flows_into_unified_report_without_losing_distinctions(tmp
 def test_evidence_loader_rejects_inconsistent_review_counts(tmp_path: Path):
     evidence = tmp_path / "bad.json"
     evidence.write_text(json.dumps({
-        "source": "AMRFinderPlus", "row_count": 1, "review_flag_rows": 0,
-        "detections": [{
+        "source": "AMRFinderPlus", "row_count": 1, "amr_typed_rows": 0,
+        "scope_counts": {"plus": 1}, "type_counts": {"VIRULENCE": 1},
+        "review_flag_rows": 0, "detections": [{
             "gene_symbol": "espX1", "element_type": "VIRULENCE", "scope": "plus",
             "method": "INTERNAL_STOP", "review_required": True,
             "review_reasons": ["INTERNAL_STOP"],
