@@ -41,7 +41,7 @@ process DOWNLOAD_GENOME {
       exit 1
     fi
     echo "Downloading NCBI assembly with genome, protein and GFF3: \$assembly"
-    datasets version
+    datasets version > dataset_cli_version.txt
     datasets summary genome accession "\$assembly" --as-json-lines > assembly_summary.jsonl
     rm -f dataset.zip
     datasets download genome accession "\$assembly" \
@@ -50,6 +50,9 @@ process DOWNLOAD_GENOME {
       --filename dataset.zip
     test -s dataset.zip
     mkdir dataset
+    sha256sum dataset.zip > dataset/dataset_sha256.txt
+    cp dataset_cli_version.txt dataset/
+    cp assembly_summary.jsonl dataset/
     unzip -q dataset.zip -d dataset
     test -s dataset/ncbi_dataset/data/assembly_data_report.jsonl
     fasta=\$(find dataset/ncbi_dataset/data -name '*_genomic.fna' -type f -print -quit)
@@ -82,6 +85,9 @@ process AMRFINDERPLUS {
     path "amrfinderplus_summary.md"
     path "tool_versions.txt"
     path "amrfinderplus.log"
+    path "dataset_cli_version.txt"
+    path "dataset_sha256.txt"
+    path "assembly_summary.jsonl"
     script:
     """
     set -Eeuo pipefail
@@ -140,6 +146,9 @@ process AMRFINDERPLUS {
       --report amrfinderplus_combined.tsv --output amrfinderplus_summary.md \
       >> amrfinderplus.log 2>&1
     test -s amrfinderplus_summary.md
+    cp "$(find -L . -type f -name dataset_cli_version.txt -print -quit)" dataset_cli_version.txt
+    cp "$(find -L . -type f -name dataset_sha256.txt -print -quit)" dataset_sha256.txt
+    cp "$(find -L . -type f -name assembly_summary.jsonl -print -quit)" assembly_summary.jsonl
     {
       echo "Nucleotide baseline data rows: \$(($(wc -l < amrfinderplus_nucleotide_baseline.tsv) - 1))"
       echo "Combined data rows: \$(($(wc -l < amrfinderplus_combined.tsv) - 1))"
@@ -154,6 +163,9 @@ process AMRFINDERPLUS {
     echo "# Stub only — no biological analysis was performed." > amrfinderplus_summary.md
     echo "stub" > tool_versions.txt
     echo "stub" > amrfinderplus.log
+    echo "stub" > dataset_cli_version.txt
+    echo "stub" > dataset_sha256.txt
+    echo "stub" > assembly_summary.jsonl
     """
 }
 
