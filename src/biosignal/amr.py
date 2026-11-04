@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 
 _REVIEW_METHODS = {"INTERNAL_STOP", "PARTIAL", "PARTIAL_CONTIG_END"}
+_MISSING_VALUES = {"", ".", "NA", "N/A", "NULL", "NONE"}
 
 
 @dataclass(frozen=True)
@@ -74,18 +75,18 @@ def _first(row: dict[str, str], *keys: str) -> str:
 
 def _optional(value: str) -> str | None:
     value = value.strip()
-    return value if value and value != "." else None
+    return None if value.upper() in _MISSING_VALUES else value
 
 
 def _float(value: str) -> float | None:
     value = value.strip()
-    if value in ("", "."):
+    if value.upper() in _MISSING_VALUES:
         return None
     return float(value)
 
 
 def _int(value: str) -> int | None:
     value = value.strip()
-    if value in ("", "."):
+    if value.upper() in _MISSING_VALUES:
         return None
     return int(value)
