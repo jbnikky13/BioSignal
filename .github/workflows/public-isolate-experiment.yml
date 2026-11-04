@@ -120,7 +120,9 @@ jobs:
             -ansi-log false
 
       - name: Resolve and run isolate workflow
-        shell: bash -el {0}
+        # Disable GitHub's implicit -e for this step; the script captures and checks
+        # Nextflow and validator exit codes explicitly below.
+        shell: bash {0}
         env:
           NCBI_API_KEY: ${{ secrets.NCBI_API_KEY }}
         run: |
