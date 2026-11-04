@@ -49,6 +49,6 @@ The Python ingestion layer preserves the AMRFinderPlus `Scope` field (`core`, `p
 
 Rows with methods `INTERNAL_STOP`, `PARTIAL`, or `PARTIAL_CONTIG_END` carry an explicit manual-review flag and reason. Rows are not deduplicated by element symbol; distinct loci remain distinct evidence records.
 
-Only rows explicitly typed `AMR` are included in the report's AMR-hit list. Plus-scope virulence and stress findings remain visible as genomic detections but are not mislabeled as AMR hits. The report serializer retains each detection's scope, type, method, genomic location, and review flags.
+Only rows explicitly typed `AMR` are included in the report's AMR-hit list. Plus-scope virulence and stress findings remain visible as genomic detections but are not mislabeled as AMR hits. The live workflow also writes `amrfinderplus_evidence.json` through the same normalized parser. It retains each detection's scope, type, method, reference accession, identity, coverage, genomic location, and review flags; the workflow validator checks row counts and review-flag consistency.
 
 Aggregated AST observations are never converted into an individual isolate's resistant/susceptible phenotype. They are reported as aggregate resistance proportions only. No genotype-phenotype linkage is made unless compatible isolate-level identifiers and evidence are available and verified. A gene or mutation detection is never presented as confirmed phenotypic resistance.
