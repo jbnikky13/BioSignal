@@ -146,9 +146,9 @@ process AMRFINDERPLUS {
       --report amrfinderplus_combined.tsv --output amrfinderplus_summary.md \
       >> amrfinderplus.log 2>&1
     test -s amrfinderplus_summary.md
-    cp "$(find -L . -type f -name dataset_cli_version.txt -print -quit)" dataset_cli_version.txt
-    cp "$(find -L . -type f -name dataset_sha256.txt -print -quit)" dataset_sha256.txt
-    cp "$(find -L . -type f -name assembly_summary.jsonl -print -quit)" assembly_summary.jsonl
+    cp "\$(find -L . -type f -name dataset_cli_version.txt -print -quit)" dataset_cli_version.txt
+    cp "\$(find -L . -type f -name dataset_sha256.txt -print -quit)" dataset_sha256.txt
+    cp "\$(find -L . -type f -name assembly_summary.jsonl -print -quit)" assembly_summary.jsonl
     {
       echo "Nucleotide baseline data rows: \$(($(wc -l < amrfinderplus_nucleotide_baseline.tsv) - 1))"
       echo "Combined data rows: \$(($(wc -l < amrfinderplus_combined.tsv) - 1))"
