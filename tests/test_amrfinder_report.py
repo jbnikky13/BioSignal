@@ -1,8 +1,9 @@
 from pathlib import Path
+import json
 
 import pytest
 
-from biosignal.amrfinder_report import summarize_report, validate_inputs
+from biosignal.amrfinder_report import export_evidence, summarize_report, validate_inputs
 
 
 def test_validate_inputs_requires_matching_gff_protein_ids(tmp_path: Path):
@@ -50,6 +51,32 @@ def test_summary_separates_scope_and_flags_internal_stop(tmp_path: Path):
     assert result["review_flag_rows"] == 1
     assert "phenotypic antimicrobial resistance" in text
     assert "INTERNAL_STOP" in text
+
+
+def test_export_evidence_keeps_scope_type_loci_and_review_flags(tmp_path: Path):
+    report = tmp_path / "hits.tsv"
+    output = tmp_path / "evidence.json"
+    report.write_text(
+        "Protein id\tContig id\tStart\tStop\tElement symbol\tScope\tType\tMethod\t"
+        "Closest reference accession\t% Coverage of reference\t% Identity to reference\n"
+        "WP_1\tcontig1\t1\t900\tblaEC\tplus\tAMR\tBLASTP\tWP_REF\t100\t98.9\n"
+        "WP_2\tcontig1\t10\t300\tespX1\tplus\tVIRULENCE\tINTERNAL_STOP\t.\t.\t.\n"
+        "WP_3\tcontig2\t400\t800\tgyrA\tcore\tAMR\tPOINT\tWP_GYR\t100\t100\n",
+        encoding="utf-8",
+    )
+
+    result = export_evidence(report, output)
+    payload = json.loads(output.read_text(encoding="utf-8"))
+
+    assert result["scope_counts"] == {"core": 1, "plus": 2}
+    assert result["amr_typed_rows"] == 2
+    assert result["review_flag_rows"] == 1
+    assert payload["detections"][0]["coverage"] == 100.0
+    assert payload["detections"][0]["reference"] == "WP_REF"
+    assert payload["detections"][1]["review_required"] is True
+    assert payload["detections"][1]["review_reasons"] == ["INTERNAL_STOP"]
+    assert payload["detections"][2]["scope"] == "core"
+    assert "do not establish phenotypic resistance" in payload["interpretation"]
 
 
 def test_summary_accepts_header_only_report_as_zero_hits(tmp_path: Path):
