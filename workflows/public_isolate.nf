@@ -35,17 +35,17 @@ process DOWNLOAD_GENOME {
     script:
     """
     set -Eeuo pipefail
-    assembly=ESCAPED_$(tr -d '[:space:]' < ${assembly_accession_file})
-    test -n "ESCAPED_$assembly"
-    if [[ ! "ESCAPED_$assembly" =~ ^(GCA|GCF)_[0-9]+\. [0-9]+ESCAPED_$ ]]; then
-      echo "Invalid NCBI assembly accession: ESCAPED_$assembly" >&2
+    assembly=\$(tr -d '[:space:]' < ${assembly_accession_file})
+    test -n "\$assembly"
+    if [[ ! "\$assembly" =~ ^(GCA|GCF)_[0-9]+\\.[0-9]+\$ ]]; then
+      echo "Invalid NCBI assembly accession: \$assembly" >&2
       exit 1
     fi
-    echo "Downloading NCBI assembly with genome, protein and GFF3: ESCAPED_$assembly"
+    echo "Downloading NCBI assembly with genome, protein and GFF3: \$assembly"
     datasets version > dataset_cli_version.txt
-    datasets summary genome accession "ESCAPED_$assembly" --as-json-lines > assembly_summary.jsonl
+    datasets summary genome accession "\$assembly" --as-json-lines > assembly_summary.jsonl
     rm -f dataset.zip
-    datasets download genome accession "ESCAPED_$assembly" \
+    datasets download genome accession "\$assembly" \
       --include genome,protein,gff3 \
       --no-progressbar \
       --filename dataset.zip
@@ -56,18 +56,18 @@ process DOWNLOAD_GENOME {
     cp assembly_summary.jsonl dataset/
     unzip -q dataset.zip -d dataset
     test -s dataset/ncbi_dataset/data/assembly_data_report.jsonl
-    fasta=ESCAPED_$(find dataset/ncbi_dataset/data -name '*_genomic.fna' -type f -print -quit)
-    protein=ESCAPED_$(find dataset/ncbi_dataset/data -name 'protein.faa' -type f -print -quit)
-    gff=ESCAPED_$(find dataset/ncbi_dataset/data -name 'genomic.gff' -type f -print -quit)
-    for file in "ESCAPED_$fasta" "ESCAPED_$protein" "ESCAPED_$gff"; do
-      if [[ -z "ESCAPED_$file" || ! -s "ESCAPED_$file" ]]; then
-        echo "Missing or empty required NCBI annotation file: ESCAPED_$file" >&2
+    fasta=\$(find dataset/ncbi_dataset/data -name '*_genomic.fna' -type f -print -quit)
+    protein=\$(find dataset/ncbi_dataset/data -name 'protein.faa' -type f -print -quit)
+    gff=\$(find dataset/ncbi_dataset/data -name 'genomic.gff' -type f -print -quit)
+    for file in "\$fasta" "\$protein" "\$gff"; do
+      if [[ -z "\$file" || ! -s "\$file" ]]; then
+        echo "Missing or empty required NCBI annotation file: \$file" >&2
         exit 2
       fi
     done
-    echo "Resolved nucleotide FASTA: ESCAPED_$fasta"
-    echo "Resolved protein FASTA: ESCAPED_$protein"
-    echo "Resolved GFF3 annotation: ESCAPED_$gff"
+    echo "Resolved nucleotide FASTA: \$fasta"
+    echo "Resolved protein FASTA: \$protein"
+    echo "Resolved GFF3 annotation: \$gff"
     """
     stub:
     """
@@ -95,52 +95,52 @@ process AMRFINDERPLUS {
     script:
     """
     set -Eeuo pipefail
-    if [ -n "ESCAPED_${MAMBA_ROOT_PREFIX:-}" ] && [ -d "ESCAPED_$MAMBA_ROOT_PREFIX/envs/biosignal/bin" ]; then
-      export PATH="ESCAPED_$MAMBA_ROOT_PREFIX/envs/biosignal/bin:ESCAPED_$PATH"
-      export CONDA_PREFIX="ESCAPED_$MAMBA_ROOT_PREFIX/envs/biosignal"
+    if [ -n "\${MAMBA_ROOT_PREFIX:-}" ] && [ -d "\$MAMBA_ROOT_PREFIX/envs/biosignal/bin" ]; then
+      export PATH="\$MAMBA_ROOT_PREFIX/envs/biosignal/bin:\$PATH"
+      export CONDA_PREFIX="\$MAMBA_ROOT_PREFIX/envs/biosignal"
     fi
     command -v amrfinder
     {
-      echo "AMRFinderPlus executable: ESCAPED_$(command -v amrfinder)"
+      echo "AMRFinderPlus executable: \$(command -v amrfinder)"
       amrfinder --version
       amrfinder --database_version
     } > tool_versions.txt 2>&1
     {
       echo "AMRFinderPlus diagnostics"
-      echo "Working directory: ESCAPED_$PWD"
-      echo "Executable: ESCAPED_$(command -v amrfinder)"
+      echo "Working directory: \$PWD"
+      echo "Executable: \$(command -v amrfinder)"
       cat tool_versions.txt
       echo "Staged input files:"
       find -L . -maxdepth 7 -type f -print | sort
     } > amrfinderplus.log 2>&1
 
-    fasta=ESCAPED_$(find -L . -type f -name '*_genomic.fna' -print -quit)
-    protein=ESCAPED_$(find -L . -type f -name 'protein.faa' -print -quit)
-    gff=ESCAPED_$(find -L . -type f -name 'genomic.gff' -print -quit)
-    for file in "ESCAPED_$fasta" "ESCAPED_$protein" "ESCAPED_$gff"; do
-      if [[ -z "ESCAPED_$file" || ! -s "ESCAPED_$file" ]]; then
-        echo "ERROR: Missing or empty combined-analysis input: ESCAPED_$file" | tee -a amrfinderplus.log >&2
+    fasta=\$(find -L . -type f -name '*_genomic.fna' -print -quit)
+    protein=\$(find -L . -type f -name 'protein.faa' -print -quit)
+    gff=\$(find -L . -type f -name 'genomic.gff' -print -quit)
+    for file in "\$fasta" "\$protein" "\$gff"; do
+      if [[ -z "\$file" || ! -s "\$file" ]]; then
+        echo "ERROR: Missing or empty combined-analysis input: \$file" | tee -a amrfinderplus.log >&2
         exit 2
       fi
     done
 
     echo "Validating NCBI FASTA/GFF identifier relationships" | tee -a amrfinderplus.log
     "${params.python_executable}" -m biosignal.amrfinder_report validate-inputs \
-      --nucleotide "ESCAPED_$fasta" --protein "ESCAPED_$protein" --gff "ESCAPED_$gff" \
+      --nucleotide "\$fasta" --protein "\$protein" --gff "\$gff" \
       >> amrfinderplus.log 2>&1
 
     {
       echo "Running nucleotide-only baseline"
       echo "Command: amrfinder --plus -n <genome.fna> -O ${params.amrfinder_organism} --print_node"
     } >> amrfinderplus.log
-    amrfinder --plus -n "ESCAPED_$fasta" -O "${params.amrfinder_organism}" --print_node \
+    amrfinder --plus -n "\$fasta" -O "${params.amrfinder_organism}" --print_node \
       -o amrfinderplus_nucleotide_baseline.tsv >> amrfinderplus.log 2>&1
 
     {
       echo "Running combined nucleotide + protein + GFF analysis"
       echo "Command: amrfinder --plus -n <genome.fna> -p <protein.faa> -g <genomic.gff> -O ${params.amrfinder_organism} --print_node"
     } >> amrfinderplus.log
-    amrfinder --plus -n "ESCAPED_$fasta" -p "ESCAPED_$protein" -g "ESCAPED_$gff" \
+    amrfinder --plus -n "\$fasta" -p "\$protein" -g "\$gff" \
       -O "${params.amrfinder_organism}" --print_node \
       -o amrfinderplus_combined.tsv >> amrfinderplus.log 2>&1
 
@@ -166,12 +166,12 @@ process AMRFINDERPLUS {
     test -s experiment_report.json
     test -s experiment_report.md
 
-    cp "ESCAPED_$(find -L . -type f -name dataset_cli_version.txt -print -quit)" dataset_cli_version.txt
-    cp "ESCAPED_$(find -L . -type f -name dataset_sha256.txt -print -quit)" dataset_sha256.txt
-    cp "ESCAPED_$(find -L . -type f -name assembly_summary.jsonl -print -quit)" assembly_summary.jsonl
+    cp "\$(find -L . -type f -name dataset_cli_version.txt -print -quit)" dataset_cli_version.txt
+    cp "\$(find -L . -type f -name dataset_sha256.txt -print -quit)" dataset_sha256.txt
+    cp "\$(find -L . -type f -name assembly_summary.jsonl -print -quit)" assembly_summary.jsonl
     {
-      echo "Nucleotide baseline data rows: ESCAPED_$(awk 'END { print (NR > 0 ? NR - 1 : 0) }' amrfinderplus_nucleotide_baseline.tsv)"
-      echo "Combined data rows: ESCAPED_$(awk 'END { print (NR > 0 ? NR - 1 : 0) }' amrfinderplus_combined.tsv)"
+      echo "Nucleotide baseline data rows: \$(awk 'END { print (NR > 0 ? NR - 1 : 0) }' amrfinderplus_nucleotide_baseline.tsv)"
+      echo "Combined data rows: \$(awk 'END { print (NR > 0 ? NR - 1 : 0) }' amrfinderplus_combined.tsv)"
       echo "Combined summary:"
       cat amrfinderplus_summary.md
       echo "Unified experiment report:"
