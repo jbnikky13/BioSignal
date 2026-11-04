@@ -88,11 +88,11 @@ def summarize_report(report: Path, output: Path) -> dict:
         "| Scope | Rows |",
         "|---|---:|",
     ]
-    lines.extend(f"| {key} | {value} |" for key, value in sorted(scopes.items()))
+    if rows:\n        lines.extend(f"| {key} | {value} |" for key, value in sorted(scopes.items()))\n    else:\n        lines.append("| None | 0 |")
     lines += ["", "## Type counts", "", "| Type | Rows |", "|---|---:|"]
-    lines.extend(f"| {key} | {value} |" for key, value in sorted(types.items()))
+    if rows:\n        lines.extend(f"| {key} | {value} |" for key, value in sorted(types.items()))\n    else:\n        lines.append("| None | 0 |")
     lines += ["", "## Detection-method counts", "", "| Method | Rows |", "|---|---:|"]
-    lines.extend(f"| {key} | {value} |" for key, value in sorted(methods.items()))
+    if rows:\n        lines.extend(f"| {key} | {value} |" for key, value in sorted(methods.items()))\n    else:\n        lines.append("| None | 0 |")
     lines += ["", "## Review flags", ""]
     if caution_rows:
         lines.append("The following rows use methods that warrant manual sequence/context review:")
