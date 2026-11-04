@@ -50,3 +50,15 @@ def test_summary_separates_scope_and_flags_internal_stop(tmp_path: Path):
     assert result["review_flag_rows"] == 1
     assert "phenotypic antimicrobial resistance" in text
     assert "INTERNAL_STOP" in text
+
+
+def test_summary_accepts_header_only_report_as_zero_hits(tmp_path: Path):
+    report = tmp_path / "empty.tsv"
+    output = tmp_path / "summary.md"
+    report.write_text(
+        "Element symbol\\tScope\\tType\\tMethod\\n",
+        encoding="utf-8",
+    )
+    result = summarize_report(report, output)
+    assert result["report_rows"] == 0
+    assert "valid empty result" in output.read_text(encoding="utf-8")
