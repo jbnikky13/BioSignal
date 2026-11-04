@@ -75,8 +75,20 @@ def hits_from_evidence_payload(payload: dict) -> list[AMRHit]:
             review_required=review_required,
             review_reasons=tuple(reasons),
         ))
+    amr_count = sum(hit.is_amr_typed for hit in hits)
+    if payload.get("amr_typed_rows") != amr_count:
+        raise ValueError("Evidence JSON amr_typed_rows does not match detection types")
     if payload.get("review_flag_rows") != sum(hit.review_required for hit in hits):
         raise ValueError("Evidence JSON review_flag_rows does not match detection flags")
+    scope_counts: dict[str, int] = {}
+    type_counts: dict[str, int] = {}
+    for hit in hits:
+        scope_counts[hit.scope] = scope_counts.get(hit.scope, 0) + 1
+        type_counts[hit.element_type] = type_counts.get(hit.element_type, 0) + 1
+    if payload.get("scope_counts") != scope_counts:
+        raise ValueError("Evidence JSON scope_counts do not match detection scopes")
+    if payload.get("type_counts") != type_counts:
+        raise ValueError("Evidence JSON type_counts do not match detection types")
     return hits
 
 
