@@ -97,18 +97,29 @@ jobs:
           echo "BioSignal task interpreter: $(python -c 'import sys; print(sys.executable)')"
           pytest -q
 
-      - name: AMRFinder nucleotide smoke test
+      - name: AMRFinder nucleotide and combined-mode smoke tests
         shell: bash -el {0}
         run: |
           set -euo pipefail
-          curl -fsSL https://raw.githubusercontent.com/ncbi/amr/master/test_dna.fa -o "$RUNNER_TEMP/test_dna.fa"
+          base="https://raw.githubusercontent.com/ncbi/amr/master"
+          curl -fsSL "$base/test_dna.fa" -o "$RUNNER_TEMP/test_dna.fa"
+          curl -fsSL "$base/test_prot.fa" -o "$RUNNER_TEMP/test_prot.fa"
+          curl -fsSL "$base/test_prot.gff" -o "$RUNNER_TEMP/test_prot.gff"
           amrfinder --plus \
             -n "$RUNNER_TEMP/test_dna.fa" \
             -O "$AMRFINDER_ORGANISM" \
             --print_node \
-            -o "$RUNNER_TEMP/amrfinder-smoke.tsv"
-          test -s "$RUNNER_TEMP/amrfinder-smoke.tsv"
-          head -5 "$RUNNER_TEMP/amrfinder-smoke.tsv"
+            -o "$RUNNER_TEMP/amrfinder-nucleotide-smoke.tsv"
+          amrfinder --plus \
+            -n "$RUNNER_TEMP/test_dna.fa" \
+            -p "$RUNNER_TEMP/test_prot.fa" \
+            -g "$RUNNER_TEMP/test_prot.gff" \
+            -O "$AMRFINDER_ORGANISM" \
+            --print_node \
+            -o "$RUNNER_TEMP/amrfinder-combined-smoke.tsv"
+          test -s "$RUNNER_TEMP/amrfinder-nucleotide-smoke.tsv"
+          test -s "$RUNNER_TEMP/amrfinder-combined-smoke.tsv"
+          head -5 "$RUNNER_TEMP/amrfinder-combined-smoke.tsv"
 
       - name: Compile workflow in stub mode
         shell: bash -el {0}
@@ -152,11 +163,9 @@ jobs:
           import json
           import os
           import re
-          import sys
 
           required_processes = {"RESOLVE_ASSEMBLY", "DOWNLOAD_GENOME", "AMRFINDERPLUS"}
-          trace_path = "nextflow-trace.txt"
-          with open(trace_path, newline="", encoding="utf-8") as handle:
+          with open("nextflow-trace.txt", newline="", encoding="utf-8") as handle:
               rows = list(csv.DictReader(handle, delimiter="\t"))
           observed = {row.get("name"): row for row in rows}
           missing = required_processes - observed.keys()
@@ -167,31 +176,58 @@ jobs:
               if row.get("status") != "COMPLETED" or row.get("exit") != "0":
                   raise SystemExit(f"{name} did not complete cleanly: {row}")
 
-          for path in (
-              "results/amrfinderplus.tsv",
+          required = (
+              "results/amrfinderplus_nucleotide_baseline.tsv",
+              "results/amrfinderplus_combined.tsv",
+              "results/amrfinderplus_summary.md",
+              "results/amrfinderplus_evidence.json",
               "results/tool_versions.txt",
               "results/amrfinderplus.log",
               "results/assembly_manifest.json",
+              "results/dataset_cli_version.txt",
+              "results/dataset_sha256.txt",
+              "results/assembly_summary.jsonl",
               "nextflow-report.html",
-          ):
+          )
+          for path in required:
               if not os.path.isfile(path) or os.path.getsize(path) == 0:
                   raise SystemExit(f"Required output missing or empty: {path}")
 
-          with open("results/amrfinderplus.tsv", newline="", encoding="utf-8") as handle:
-              report = list(csv.reader(handle, delimiter="\t"))
-          if len(report) < 2 or "Element symbol" not in report[0]:
-              raise SystemExit("AMRFinderPlus report is empty or has an unexpected header")
+          for path in (
+              "results/amrfinderplus_nucleotide_baseline.tsv",
+              "results/amrfinderplus_combined.tsv",
+          ):
+              with open(path, newline="", encoding="utf-8") as handle:
+                  reader = csv.reader(handle, delimiter="\t")
+                  header = next(reader, [])
+                  if "Element symbol" not in header or "Scope" not in header or "Method" not in header:
+                      raise SystemExit(f"Unexpected AMRFinderPlus TSV header: {path}")
+
           with open("results/assembly_manifest.json", encoding="utf-8") as handle:
               manifest = json.load(handle)
           if manifest.get("biosample_accession") != os.environ["BIOSAMPLE"].upper():
-              raise SystemExit("Assembly manifest BioSample does not match the requested BioSample")
+              raise SystemExit("Assembly manifest BioSample does not match requested BioSample")
           if not re.fullmatch(r"GCA_[0-9]+\.[0-9]+|GCF_[0-9]+\.[0-9]+", manifest.get("assembly_accession", "")):
               raise SystemExit("Assembly manifest contains an invalid NCBI assembly accession")
           versions = open("results/tool_versions.txt", encoding="utf-8").read()
           if "AMRFinderPlus executable:" not in versions or "Database version:" not in versions:
               raise SystemExit("AMRFinderPlus software/database versions are missing")
-          print(f"Verified {len(report)-1} AMRFinderPlus report rows for {manifest['assembly_accession']}")
-          print("All three Nextflow processes completed with exit code 0; required outputs are present.")
+          summary = open("results/amrfinderplus_summary.md", encoding="utf-8").read()
+          if "Interpretation limits" not in summary or "Core and Plus scopes" not in summary:
+              raise SystemExit("Scientific interpretation caveats are missing from summary")
+          with open("results/amrfinderplus_evidence.json", encoding="utf-8") as handle:
+              evidence = json.load(handle)
+          detections = evidence.get("detections", [])
+          if evidence.get("row_count") != len(detections):
+              raise SystemExit("Normalized evidence row count does not match detections")
+          if any(not item.get("scope") or not item.get("element_type") for item in detections):
+              raise SystemExit("Normalized evidence is missing scope or element type")
+          if evidence.get("review_flag_rows") != sum(bool(item.get("review_required")) for item in detections):
+              raise SystemExit("Normalized evidence review-flag count is inconsistent")
+          if "do not establish phenotypic resistance" not in evidence.get("interpretation", ""):
+              raise SystemExit("Normalized evidence interpretation warning is missing")
+          print(f"Verified nucleotide baseline and combined AMRFinderPlus outputs for {manifest['assembly_accession']}")
+          print("All three Nextflow processes completed with exit code 0; provenance and interpretation outputs are present.")
           PY
           validation_rc=$?
 

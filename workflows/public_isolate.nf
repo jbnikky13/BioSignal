@@ -40,22 +40,33 @@ process DOWNLOAD_GENOME {
       echo "Invalid NCBI assembly accession: \$assembly" >&2
       exit 1
     fi
-    echo "Downloading NCBI assembly: \$assembly"
-    datasets version
+    echo "Downloading NCBI assembly with genome, protein and GFF3: \$assembly"
+    datasets version > dataset_cli_version.txt
     datasets summary genome accession "\$assembly" --as-json-lines > assembly_summary.jsonl
     rm -f dataset.zip
     datasets download genome accession "\$assembly" \
-      --include genome \
+      --include genome,protein,gff3 \
       --no-progressbar \
       --filename dataset.zip
     test -s dataset.zip
     mkdir dataset
+    sha256sum dataset.zip > dataset/dataset_sha256.txt
+    cp dataset_cli_version.txt dataset/
+    cp assembly_summary.jsonl dataset/
     unzip -q dataset.zip -d dataset
     test -s dataset/ncbi_dataset/data/assembly_data_report.jsonl
     fasta=\$(find dataset/ncbi_dataset/data -name '*_genomic.fna' -type f -print -quit)
-    test -n "\$fasta"
-    test -s "\$fasta"
-    echo "Resolved FASTA: \$fasta"
+    protein=\$(find dataset/ncbi_dataset/data -name 'protein.faa' -type f -print -quit)
+    gff=\$(find dataset/ncbi_dataset/data -name 'genomic.gff' -type f -print -quit)
+    for file in "\$fasta" "\$protein" "\$gff"; do
+      if [[ -z "\$file" || ! -s "\$file" ]]; then
+        echo "Missing or empty required NCBI annotation file: \$file" >&2
+        exit 2
+      fi
+    done
+    echo "Resolved nucleotide FASTA: \$fasta"
+    echo "Resolved protein FASTA: \$protein"
+    echo "Resolved GFF3 annotation: \$gff"
     """
     stub:
     """
@@ -69,14 +80,21 @@ process AMRFINDERPLUS {
     input:
     path dataset
     output:
-    path "amrfinderplus.tsv"
+    path "amrfinderplus_nucleotide_baseline.tsv"
+    path "amrfinderplus_combined.tsv"
+    path "amrfinderplus_summary.md"
+    path "amrfinderplus_evidence.json"
     path "tool_versions.txt"
     path "amrfinderplus.log"
+    path "dataset_cli_version.txt"
+    path "dataset_sha256.txt"
+    path "assembly_summary.jsonl"
     script:
     """
     set -Eeuo pipefail
     if [ -n "\${MAMBA_ROOT_PREFIX:-}" ] && [ -d "\$MAMBA_ROOT_PREFIX/envs/biosignal/bin" ]; then
       export PATH="\$MAMBA_ROOT_PREFIX/envs/biosignal/bin:\$PATH"
+      export CONDA_PREFIX="\$MAMBA_ROOT_PREFIX/envs/biosignal"
     fi
     command -v amrfinder
     {
@@ -90,39 +108,70 @@ process AMRFINDERPLUS {
       echo "Executable: \$(command -v amrfinder)"
       cat tool_versions.txt
       echo "Staged input files:"
-      find -L . -maxdepth 6 -type f -print | sort
+      find -L . -maxdepth 7 -type f -print | sort
     } > amrfinderplus.log 2>&1
 
     fasta=\$(find -L . -type f -name '*_genomic.fna' -print -quit)
-    if [[ -z "\$fasta" ]]; then
-      echo "ERROR: No NCBI genomic FASTA was found in the staged input directory." | tee -a amrfinderplus.log >&2
-      exit 2
-    fi
-    if [[ ! -s "\$fasta" ]]; then
-      echo "ERROR: The staged genomic FASTA is empty: \$fasta" | tee -a amrfinderplus.log >&2
-      exit 2
-    fi
+    protein=\$(find -L . -type f -name 'protein.faa' -print -quit)
+    gff=\$(find -L . -type f -name 'genomic.gff' -print -quit)
+    for file in "\$fasta" "\$protein" "\$gff"; do
+      if [[ -z "\$file" || ! -s "\$file" ]]; then
+        echo "ERROR: Missing or empty combined-analysis input: \$file" | tee -a amrfinderplus.log >&2
+        exit 2
+      fi
+    done
+
+    echo "Validating NCBI FASTA/GFF identifier relationships" | tee -a amrfinderplus.log
+    "${params.python_executable}" -m biosignal.amrfinder_report validate-inputs \
+      --nucleotide "\$fasta" --protein "\$protein" --gff "\$gff" \
+      >> amrfinderplus.log 2>&1
+
     {
-      echo "FASTA: \$fasta"
-      echo "--- command ---"
-      echo "AMRFinder command: amrfinder --plus -n <FASTA> --print_node"
-      echo "--- output ---"
-    } >> amrfinderplus.log 2>&1
-    set +e
-    amrfinder --plus -n "\$fasta" -O "${params.amrfinder_organism}" --print_node -o amrfinderplus.tsv >> amrfinderplus.log 2>&1
-    status=\$?
-    set -e
-    echo "AMRFinder exit status: \$status" >> amrfinderplus.log
-    if [ "\$status" -ne 0 ]; then cat amrfinderplus.log >&2; exit "\$status"; fi
-    test -s amrfinderplus.tsv
-    printf "AMRFinder report rows: " >> amrfinderplus.log
-    wc -l < amrfinderplus.tsv >> amrfinderplus.log
+      echo "Running nucleotide-only baseline"
+      echo "Command: amrfinder --plus -n <genome.fna> -O ${params.amrfinder_organism} --print_node"
+    } >> amrfinderplus.log
+    amrfinder --plus -n "\$fasta" -O "${params.amrfinder_organism}" --print_node \
+      -o amrfinderplus_nucleotide_baseline.tsv >> amrfinderplus.log 2>&1
+
+    {
+      echo "Running combined nucleotide + protein + GFF analysis"
+      echo "Command: amrfinder --plus -n <genome.fna> -p <protein.faa> -g <genomic.gff> -O ${params.amrfinder_organism} --print_node"
+    } >> amrfinderplus.log
+    amrfinder --plus -n "\$fasta" -p "\$protein" -g "\$gff" \
+      -O "${params.amrfinder_organism}" --print_node \
+      -o amrfinderplus_combined.tsv >> amrfinderplus.log 2>&1
+
+    test -s amrfinderplus_nucleotide_baseline.tsv
+    test -s amrfinderplus_combined.tsv
+    "${params.python_executable}" -m biosignal.amrfinder_report summarize \
+      --report amrfinderplus_combined.tsv --output amrfinderplus_summary.md \
+      >> amrfinderplus.log 2>&1
+    test -s amrfinderplus_summary.md
+    "${params.python_executable}" -m biosignal.amrfinder_report export-evidence \
+      --report amrfinderplus_combined.tsv --output amrfinderplus_evidence.json \
+      >> amrfinderplus.log 2>&1
+    test -s amrfinderplus_evidence.json
+    cp "\$(find -L . -type f -name dataset_cli_version.txt -print -quit)" dataset_cli_version.txt
+    cp "\$(find -L . -type f -name dataset_sha256.txt -print -quit)" dataset_sha256.txt
+    cp "\$(find -L . -type f -name assembly_summary.jsonl -print -quit)" assembly_summary.jsonl
+    {
+      echo "Nucleotide baseline data rows: \$(awk 'END { print (NR > 0 ? NR - 1 : 0) }' amrfinderplus_nucleotide_baseline.tsv)"
+      echo "Combined data rows: \$(awk 'END { print (NR > 0 ? NR - 1 : 0) }' amrfinderplus_combined.tsv)"
+      echo "Combined summary:"
+      cat amrfinderplus_summary.md
+    } >> amrfinderplus.log
     """
     stub:
     """
-    echo "stub" > amrfinderplus.tsv
+    printf "Element symbol\\tScope\\tType\\tMethod\\n" > amrfinderplus_nucleotide_baseline.tsv
+    printf "Element symbol\\tScope\\tType\\tMethod\\n" > amrfinderplus_combined.tsv
+    echo "# Stub only — no biological analysis was performed." > amrfinderplus_summary.md
+    echo '{"schema_version":"1.0","source":"AMRFinderPlus","row_count":0,"amr_typed_rows":0,"scope_counts":{},"type_counts":{},"review_flag_rows":0,"detections":[],"interpretation":"Stub only; no biological analysis was performed."}' > amrfinderplus_evidence.json
     echo "stub" > tool_versions.txt
     echo "stub" > amrfinderplus.log
+    echo "stub" > dataset_cli_version.txt
+    echo "stub" > dataset_sha256.txt
+    echo "stub" > assembly_summary.jsonl
     """
 }
 
