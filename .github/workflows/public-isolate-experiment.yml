@@ -166,7 +166,7 @@ jobs:
 
           required_processes = {"RESOLVE_ASSEMBLY", "DOWNLOAD_GENOME", "AMRFINDERPLUS"}
           with open("nextflow-trace.txt", newline="", encoding="utf-8") as handle:
-              rows = list(csv.DictReader(handle, delimiter="\\t"))
+              rows = list(csv.DictReader(handle, delimiter="\t"))
           observed = {row.get("name"): row for row in rows}
           missing = required_processes - observed.keys()
           if missing:
@@ -197,7 +197,7 @@ jobs:
               "results/amrfinderplus_combined.tsv",
           ):
               with open(path, newline="", encoding="utf-8") as handle:
-                  reader = csv.reader(handle, delimiter="\\t")
+                  reader = csv.reader(handle, delimiter="\t")
                   header = next(reader, [])
                   if "Element symbol" not in header or "Scope" not in header or "Method" not in header:
                       raise SystemExit(f"Unexpected AMRFinderPlus TSV header: {path}")
@@ -206,7 +206,7 @@ jobs:
               manifest = json.load(handle)
           if manifest.get("biosample_accession") != os.environ["BIOSAMPLE"].upper():
               raise SystemExit("Assembly manifest BioSample does not match requested BioSample")
-          if not re.fullmatch(r"GCA_[0-9]+\\.[0-9]+|GCF_[0-9]+\\.[0-9]+", manifest.get("assembly_accession", "")):
+          if not re.fullmatch(r"GCA_[0-9]+\.[0-9]+|GCF_[0-9]+\.[0-9]+", manifest.get("assembly_accession", "")):
               raise SystemExit("Assembly manifest contains an invalid NCBI assembly accession")
           versions = open("results/tool_versions.txt", encoding="utf-8").read()
           if "AMRFinderPlus executable:" not in versions or "Database version:" not in versions:
