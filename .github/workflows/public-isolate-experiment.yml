@@ -235,11 +235,12 @@ jobs:
           report_detections = report.get("genomic_detections", [])
           if len(report_detections) != len(detections):
               raise SystemExit("Unified report detection count differs from normalized evidence")
-          if report.get("amr_hits") != [
+          expected_amr_hits = sorted({
               item.get("gene_symbol") for item in detections
               if item.get("element_type", "").strip().upper() == "AMR" and item.get("gene_symbol")
-          ]:
-              raise SystemExit("Unified report AMR hit list does not match explicitly AMR-typed evidence")
+          })
+          if report.get("amr_hits") != expected_amr_hits:
+              raise SystemExit("Unified report AMR hit symbols do not match the unique explicitly AMR-typed evidence symbols")
           if any(
               item.get("element_type", "").strip().upper() in {"VIRULENCE", "STRESS"}
               and item.get("gene_symbol") in report.get("amr_hits", [])
