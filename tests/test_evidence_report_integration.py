@@ -53,6 +53,13 @@ def test_json_evidence_flows_into_unified_report_without_losing_distinctions(tmp
     assert result["genomic_detection_rows"] == 4
     assert result["amr_typed_rows"] == 2
     assert result["review_flag_rows"] == 1
+    assert payload["summary"] == {
+        "row_count": 4,
+        "amr_typed_rows": 2,
+        "scope_counts": {"core": 1, "plus": 3},
+        "type_counts": {"AMR": 2, "STRESS": 1, "VIRULENCE": 1},
+        "review_flag_rows": 1,
+    }
     assert payload["amr_hits"] == ["blaEC", "gyrA"]
     assert len(payload["genomic_detections"]) == 4
     assert {row["scope"] for row in payload["genomic_detections"]} == {"core", "plus"}
