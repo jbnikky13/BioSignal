@@ -3,6 +3,7 @@ nextflow.enable.dsl=2
 params.biosample = "SAMN05215988"
 params.amrfinder_organism = "Escherichia"
 params.outdir = "results"
+params.python_executable = "python"
 
 process RESOLVE_ASSEMBLY {
     publishDir params.outdir, mode: "copy", overwrite: true
@@ -12,8 +13,11 @@ process RESOLVE_ASSEMBLY {
     tuple path("assembly_manifest.json"), path("assembly_accession.txt")
     script:
     """
-    python -m biosignal.resolve_assembly "${biosample}" --output assembly_manifest.json
-    python -c 'import json; print(json.load(open("assembly_manifest.json", encoding="utf-8"))["assembly_accession"])' > assembly_accession.txt
+    echo "Python interpreter: ${params.python_executable}"
+    test -x "${params.python_executable}"
+    "${params.python_executable}" -c 'import biosignal.resolve_assembly'
+    "${params.python_executable}" -m biosignal.resolve_assembly "${biosample}" --output assembly_manifest.json
+    "${params.python_executable}" -c 'import json; print(json.load(open("assembly_manifest.json", encoding="utf-8"))["assembly_accession"])' > assembly_accession.txt
     """
     stub:
     """
