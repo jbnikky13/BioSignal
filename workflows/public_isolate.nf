@@ -83,6 +83,7 @@ process AMRFINDERPLUS {
     path "amrfinderplus_nucleotide_baseline.tsv"
     path "amrfinderplus_combined.tsv"
     path "amrfinderplus_summary.md"
+    path "amrfinderplus_evidence.json"
     path "tool_versions.txt"
     path "amrfinderplus.log"
     path "dataset_cli_version.txt"
@@ -146,6 +147,10 @@ process AMRFINDERPLUS {
       --report amrfinderplus_combined.tsv --output amrfinderplus_summary.md \
       >> amrfinderplus.log 2>&1
     test -s amrfinderplus_summary.md
+    "${params.python_executable}" -m biosignal.amrfinder_report export-evidence \
+      --report amrfinderplus_combined.tsv --output amrfinderplus_evidence.json \
+      >> amrfinderplus.log 2>&1
+    test -s amrfinderplus_evidence.json
     cp "\$(find -L . -type f -name dataset_cli_version.txt -print -quit)" dataset_cli_version.txt
     cp "\$(find -L . -type f -name dataset_sha256.txt -print -quit)" dataset_sha256.txt
     cp "\$(find -L . -type f -name assembly_summary.jsonl -print -quit)" assembly_summary.jsonl
@@ -161,6 +166,7 @@ process AMRFINDERPLUS {
     printf "Element symbol\\tScope\\tType\\tMethod\\n" > amrfinderplus_nucleotide_baseline.tsv
     printf "Element symbol\\tScope\\tType\\tMethod\\n" > amrfinderplus_combined.tsv
     echo "# Stub only — no biological analysis was performed." > amrfinderplus_summary.md
+    echo '{"schema_version":"1.0","source":"AMRFinderPlus","row_count":0,"amr_typed_rows":0,"scope_counts":{},"type_counts":{},"review_flag_rows":0,"detections":[],"interpretation":"Stub only; no biological analysis was performed."}' > amrfinderplus_evidence.json
     echo "stub" > tool_versions.txt
     echo "stub" > amrfinderplus.log
     echo "stub" > dataset_cli_version.txt
