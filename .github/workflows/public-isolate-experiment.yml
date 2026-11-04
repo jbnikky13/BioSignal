@@ -180,6 +180,7 @@ jobs:
               "results/amrfinderplus_nucleotide_baseline.tsv",
               "results/amrfinderplus_combined.tsv",
               "results/amrfinderplus_summary.md",
+              "results/amrfinderplus_evidence.json",
               "results/tool_versions.txt",
               "results/amrfinderplus.log",
               "results/assembly_manifest.json",
@@ -214,6 +215,17 @@ jobs:
           summary = open("results/amrfinderplus_summary.md", encoding="utf-8").read()
           if "Interpretation limits" not in summary or "Core and Plus scopes" not in summary:
               raise SystemExit("Scientific interpretation caveats are missing from summary")
+          with open("results/amrfinderplus_evidence.json", encoding="utf-8") as handle:
+              evidence = json.load(handle)
+          detections = evidence.get("detections", [])
+          if evidence.get("row_count") != len(detections):
+              raise SystemExit("Normalized evidence row count does not match detections")
+          if any(not item.get("scope") or not item.get("element_type") for item in detections):
+              raise SystemExit("Normalized evidence is missing scope or element type")
+          if evidence.get("review_flag_rows") != sum(bool(item.get("review_required")) for item in detections):
+              raise SystemExit("Normalized evidence review-flag count is inconsistent")
+          if "do not establish phenotypic resistance" not in evidence.get("interpretation", ""):
+              raise SystemExit("Normalized evidence interpretation warning is missing")
           print(f"Verified nucleotide baseline and combined AMRFinderPlus outputs for {manifest['assembly_accession']}")
           print("All three Nextflow processes completed with exit code 0; provenance and interpretation outputs are present.")
           PY
