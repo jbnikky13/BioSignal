@@ -4,8 +4,12 @@ from __future__ import annotations
 import argparse
 import csv
 from collections import Counter
+from dataclasses import asdict
+import json
 from pathlib import Path
 from urllib.parse import unquote
+
+from .amr import parse_amrfinder_rows
 
 
 def fasta_ids(path: Path) -> set[str]:
@@ -57,20 +61,23 @@ def validate_inputs(nucleotide: Path, protein: Path, gff: Path) -> dict[str, int
     }
 
 
-def summarize_report(report: Path, output: Path) -> dict:
+def _read_report(report: Path) -> list[dict[str, str]]:
     with report.open(newline="", encoding="utf-8") as handle:
         reader = csv.DictReader(handle, delimiter="\t")
         required = {"Element symbol", "Scope", "Type", "Method"}
         if not reader.fieldnames or not required.issubset(reader.fieldnames):
             raise ValueError(f"AMRFinderPlus TSV missing required columns: {sorted(required)}")
-        rows = list(reader)
+        return list(reader)
 
-    scopes = Counter(row["Scope"] or "UNKNOWN" for row in rows)
-    types = Counter(row["Type"] or "UNKNOWN" for row in rows)
-    methods = Counter(row["Method"] or "UNKNOWN" for row in rows)
+
+def summarize_report(report: Path, output: Path) -> dict:
+    rows = _read_report(report)
+    scopes = Counter((row["Scope"] or "UNKNOWN").strip().lower() for row in rows)
+    types = Counter((row["Type"] or "UNKNOWN").strip().upper() for row in rows)
+    methods = Counter((row["Method"] or "UNKNOWN").strip().upper() for row in rows)
     symbols = Counter(row["Element symbol"] or "UNKNOWN" for row in rows)
     review_methods = {"INTERNAL_STOP", "PARTIAL", "PARTIAL_CONTIG_END"}
-    review_rows = [row for row in rows if row["Method"] in review_methods]
+    review_rows = [row for row in rows if (row["Method"] or "").strip().upper() in review_methods]
 
     lines = [
         "# AMRFinderPlus combined-analysis summary",
@@ -139,6 +146,34 @@ def summarize_report(report: Path, output: Path) -> dict:
     }
 
 
+def export_evidence(report: Path, output: Path) -> dict:
+    """Write normalized row-level evidence without collapsing loci or scope."""
+    rows = _read_report(report)
+    detections = []
+    for hit in parse_amrfinder_rows(rows):
+        item = asdict(hit)
+        item["is_amr_typed"] = hit.is_amr_typed
+        detections.append(item)
+    payload = {
+        "schema_version": "1.0",
+        "source": "AMRFinderPlus",
+        "row_count": len(detections),
+        "amr_typed_rows": sum(item["is_amr_typed"] for item in detections),
+        "scope_counts": dict(sorted(Counter(item["scope"] for item in detections).items())),
+        "type_counts": dict(sorted(Counter(item["element_type"] for item in detections).items())),
+        "review_flag_rows": sum(item["review_required"] for item in detections),
+        "detections": detections,
+        "interpretation": (
+            "Genomic detections are evidence only; they do not establish phenotypic resistance, "
+            "expression, or treatment response."
+        ),
+    }
+    output.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return {key: payload[key] for key in (
+        "row_count", "amr_typed_rows", "scope_counts", "type_counts", "review_flag_rows"
+    )}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -149,11 +184,16 @@ def main() -> None:
     summary = sub.add_parser("summarize")
     summary.add_argument("--report", type=Path, required=True)
     summary.add_argument("--output", type=Path, required=True)
+    export = sub.add_parser("export-evidence")
+    export.add_argument("--report", type=Path, required=True)
+    export.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if args.command == "validate-inputs":
         print(validate_inputs(args.nucleotide, args.protein, args.gff))
-    else:
+    elif args.command == "summarize":
         print(summarize_report(args.report, args.output))
+    else:
+        print(export_evidence(args.report, args.output))
 
 
 if __name__ == "__main__":
