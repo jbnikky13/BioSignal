@@ -181,6 +181,8 @@ jobs:
               "results/amrfinderplus_combined.tsv",
               "results/amrfinderplus_summary.md",
               "results/amrfinderplus_evidence.json",
+              "results/experiment_report.json",
+              "results/experiment_report.md",
               "results/tool_versions.txt",
               "results/amrfinderplus.log",
               "results/assembly_manifest.json",
@@ -226,8 +228,33 @@ jobs:
               raise SystemExit("Normalized evidence review-flag count is inconsistent")
           if "do not establish phenotypic resistance" not in evidence.get("interpretation", ""):
               raise SystemExit("Normalized evidence interpretation warning is missing")
-          print(f"Verified nucleotide baseline and combined AMRFinderPlus outputs for {manifest['assembly_accession']}")
-          print("All three Nextflow processes completed with exit code 0; provenance and interpretation outputs are present.")
+          with open("results/experiment_report.json", encoding="utf-8") as handle:
+              report = json.load(handle)
+          if report.get("report_type") != "research_evidence_summary":
+              raise SystemExit("Unified report has an unexpected report_type")
+          report_detections = report.get("genomic_detections", [])
+          if len(report_detections) != len(detections):
+              raise SystemExit("Unified report detection count differs from normalized evidence")
+          if report.get("amr_hits") != [
+              item.get("gene_symbol") for item in detections
+              if item.get("element_type", "").strip().upper() == "AMR" and item.get("gene_symbol")
+          ]:
+              raise SystemExit("Unified report AMR hit list does not match explicitly AMR-typed evidence")
+          if any(
+              item.get("element_type", "").strip().upper() in {"VIRULENCE", "STRESS"}
+              and item.get("gene_symbol") in report.get("amr_hits", [])
+              for item in detections
+          ):
+              raise SystemExit("VIRULENCE/STRESS detection leaked into the AMR hit list")
+          if "do not confirm phenotypic resistance" not in report.get("interpretation", ""):
+              raise SystemExit("Unified report interpretation warning is missing")
+          report_markdown = open("results/experiment_report.md", encoding="utf-8").read()
+          if "not a clinical or diagnostic interpretation" not in report_markdown:
+              raise SystemExit("Unified report Markdown caveat is missing")
+          if "No AST phenotype observations were supplied" not in report_markdown:
+              raise SystemExit("Unified report does not state the absence of isolate-level AST observations")
+          print(f"Verified nucleotide baseline, combined AMRFinderPlus outputs, and unified reports for {manifest['assembly_accession']}")
+          print("All three Nextflow processes completed with exit code 0; evidence counts, AMR-only filtering, report artifacts, provenance and interpretation caveats are present.")
           PY
           validation_rc=$?
 
