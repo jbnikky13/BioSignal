@@ -10,6 +10,7 @@ from pathlib import Path
 from urllib.parse import unquote
 
 from .amr import parse_amrfinder_rows
+from .experiment import build_report, hits_from_evidence_payload, render_markdown, to_dict
 
 
 def fasta_ids(path: Path) -> set[str]:
@@ -80,33 +81,21 @@ def summarize_report(report: Path, output: Path) -> dict:
     review_rows = [row for row in rows if (row["Method"] or "").strip().upper() in review_methods]
 
     lines = [
-        "# AMRFinderPlus combined-analysis summary",
-        "",
+        "# AMRFinderPlus combined-analysis summary", "",
         f"- Report rows: **{len(rows)}**",
-        f"- Unique element symbols: **{len(symbols)}**",
-        "",
-        "## Scope counts",
-        "",
-        "| Scope | Rows |",
-        "|---|---:|",
+        f"- Unique element symbols: **{len(symbols)}**", "",
+        "## Scope counts", "", "| Scope | Rows |", "|---|---:|",
     ]
-    lines.extend(
-        f"| {key} | {value} |" for key, value in sorted(scopes.items())
-    ) if rows else lines.append("| None | 0 |")
+    lines.extend(f"| {key} | {value} |" for key, value in sorted(scopes.items())) if rows else lines.append("| None | 0 |")
     lines.extend(["", "## Type counts", "", "| Type | Rows |", "|---|---:|"])
-    lines.extend(
-        f"| {key} | {value} |" for key, value in sorted(types.items())
-    ) if rows else lines.append("| None | 0 |")
+    lines.extend(f"| {key} | {value} |" for key, value in sorted(types.items())) if rows else lines.append("| None | 0 |")
     lines.extend(["", "## Detection-method counts", "", "| Method | Rows |", "|---|---:|"])
-    lines.extend(
-        f"| {key} | {value} |" for key, value in sorted(methods.items())
-    ) if rows else lines.append("| None | 0 |")
+    lines.extend(f"| {key} | {value} |" for key, value in sorted(methods.items())) if rows else lines.append("| None | 0 |")
 
     lines.extend(["", "## Review flags", ""])
     if review_rows:
         lines.extend([
-            "The following rows warrant manual sequence/context review:",
-            "",
+            "The following rows warrant manual sequence/context review:", "",
             "| Element | Scope | Type | Method | Contig | Start | Stop |",
             "|---|---|---|---|---|---:|---:|",
         ])
@@ -125,15 +114,12 @@ def summarize_report(report: Path, output: Path) -> dict:
         )
 
     lines.extend([
-        "",
-        "## Interpretation limits",
-        "",
+        "", "## Interpretation limits", "",
         "- Core and Plus scopes are reported separately; Plus-scope detections are not equivalent to confirmed clinically relevant resistance determinants.",
         "- A detected gene or mutation does not establish phenotypic antimicrobial resistance, gene expression, or clinical treatment response.",
         "- Duplicate element symbols can represent distinct genomic loci and are retained as separate report rows.",
         "- Method, identity, reference coverage, and genomic context should be reviewed before biological interpretation.",
-        "- This is an automated evidence summary, not a clinical or diagnostic interpretation.",
-        "",
+        "- This is an automated evidence summary, not a clinical or diagnostic interpretation.", "",
     ])
     output.write_text("\n".join(lines), encoding="utf-8")
     return {
@@ -174,6 +160,25 @@ def export_evidence(report: Path, output: Path) -> dict:
     )}
 
 
+def build_experiment_report(evidence: Path, isolate_id: str, organism: str, source: str,
+                            output_json: Path, output_markdown: Path) -> dict:
+    """Build the downstream report directly from the exported evidence JSON."""
+    payload = json.loads(evidence.read_text(encoding="utf-8"))
+    hits = hits_from_evidence_payload(payload)
+    report = build_report(isolate_id, organism, [], hits, source=source)
+    serialized = to_dict(report)
+    output_json.write_text(json.dumps(serialized, indent=2) + "\n", encoding="utf-8")
+    output_markdown.write_text(render_markdown(report), encoding="utf-8")
+    return {
+        "isolate_id": isolate_id,
+        "genomic_detection_rows": len(hits),
+        "amr_typed_rows": sum(hit.is_amr_typed for hit in hits),
+        "review_flag_rows": sum(hit.review_required for hit in hits),
+        "markdown": str(output_markdown),
+        "json": str(output_json),
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -187,13 +192,25 @@ def main() -> None:
     export = sub.add_parser("export-evidence")
     export.add_argument("--report", type=Path, required=True)
     export.add_argument("--output", type=Path, required=True)
+    experiment = sub.add_parser("build-experiment-report")
+    experiment.add_argument("--evidence", type=Path, required=True)
+    experiment.add_argument("--isolate-id", required=True)
+    experiment.add_argument("--organism", required=True)
+    experiment.add_argument("--source", required=True)
+    experiment.add_argument("--output-json", type=Path, required=True)
+    experiment.add_argument("--output-markdown", type=Path, required=True)
     args = parser.parse_args()
     if args.command == "validate-inputs":
         print(validate_inputs(args.nucleotide, args.protein, args.gff))
     elif args.command == "summarize":
         print(summarize_report(args.report, args.output))
-    else:
+    elif args.command == "export-evidence":
         print(export_evidence(args.report, args.output))
+    else:
+        print(build_experiment_report(
+            args.evidence, args.isolate_id, args.organism, args.source,
+            args.output_json, args.output_markdown,
+        ))
 
 
 if __name__ == "__main__":
