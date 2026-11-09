@@ -1,4 +1,4 @@
-from biosignal.who_glass import summarize_geography_time
+from biosignal.surveillance import summarize_geography_time
 
 def row(iso3, country, region, year, tested, resistant):
     return {
