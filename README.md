@@ -230,3 +230,26 @@ python scripts/audit_who_glass_export.py path/to/who-glass-resistance-export.csv
 ```
 
 A successful structural audit is not scientific validation. Pooled rates are not global population estimates, and the current WHO GLASS pilot exports do not provide independent quality labels. See [the WHO GLASS validation protocol](docs/who-glass-validation-protocol.md) and [the initial exploratory report](docs/initial-who-glass-exploratory-evaluation.md). Raw user-provided CSVs are not committed to this repository.
+
+
+## Scientific collaboration and surveillance readiness
+
+The project includes an AMRIF technical concept note and an expert-feedback pathway:
+- [AMRIF technical concept note](docs/AMRIF-concept-note.md)
+- [Expert feedback plan](docs/expert-feedback-plan.md)
+- [Expert feedback register](docs/review/feedback-register.md)
+
+The validation cohort intake requirements are documented in [the validation dataset specification](docs/validation-dataset-specification.md). The empty [validation dataset template](data/examples/validation_dataset_template.csv) is a schema only; it contains no invented outcomes. A dataset must pass provenance, governance, independent-label, and protocol review before it can be treated as an evaluation cohort.
+
+Descriptive WHO-region/year summaries can be generated from a downloaded WHO GLASS dashboard export:
+
+```bash
+python scripts/build_surveillance_summary.py path/to/who-glass-export.csv \
+  --output-json reports/who-glass-summary.json \
+  --country-year-csv reports/who-glass-country-years.csv \
+  --region-year-csv reports/who-glass-region-years.csv
+```
+
+The summary reports country coverage, resistant counts, interpretable AST denominators, pooled descriptive rates, and median country rates by WHO region and year. WHO regions are not subnational geography; pooled rates are not population-representative estimates. Missing country-years are not imputed. These outputs are descriptive only and do not fit alerts or establish scientific validation.
+
+A dashboard remains a later interface milestone, after expert review of the data model, coverage, and summaries.
