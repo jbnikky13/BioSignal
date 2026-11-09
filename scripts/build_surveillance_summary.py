@@ -5,7 +5,8 @@ import argparse
 import csv
 import json
 from pathlib import Path
-from biosignal.who_glass import parse_who_glass_export, summarize_country_years, summarize_geography_time
+from biosignal.who_glass import parse_who_glass_export, summarize_country_years
+from biosignal.surveillance import summarize_geography_time
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate a WHO GLASS dashboard export and build descriptive country/WHO-region time summaries.")
