@@ -170,10 +170,10 @@ Godam Sorbari Nichole is an independent researcher and developer working at the 
 **Author to review and disclose** the use of AI-assisted tools for drafting, coding, or analysis in accordance with the selected journal's current policy. AI tools are not authors.
 ## References
 
-1. World Health Organization. GLASS manual for antimicrobial resistance surveillance in common bacteria causing human infection. Geneva: WHO; 2023. ISBN 978-92-4-007660-0. https://www.who.int/publications/i/item/9789240076600
-2. World Health Organization. Global antibiotic resistance surveillance report 2025. Geneva: WHO; 2025. https://www.who.int/teams/surveillance-prevention-control-AMR/global-antimicrobial-resistance-and-use-surveillance-system-glass
+1. World Health Organization. GLASS manual for antimicrobial resistance surveillance in common bacteria causing human infection. Geneva: WHO; 2023. ISBN 978-92-4-007660-0. https://www.who.int/publications/i/item/9789240076600. Accessed 10 Nov 2026
+2. World Health Organization. Global antibiotic resistance surveillance report 2025. Geneva: WHO; 2025. https://www.who.int/publications/i/item/9789240116337. Accessed 10 Nov 2026
 3. Feldgarden M, Brover V, Gonzalez-Escalona N, et al. AMRFinderPlus and the Reference Gene Catalog facilitate examination of the genomic links among antimicrobial resistance, stress response, and virulence. Sci Rep. 2021;11:12728. doi:10.1038/s41598-021-91456-0.
 4. Feldgarden M, Brover V, Fedorov B, et al. Curation of the AMRFinderPlus databases: applications, functionality and impact. Microb Genom. 2022;8(6):000832. doi:10.1099/mgen.0.000832.
-5. National Center for Biotechnology Information. AMRFinderPlus and NCBI Pathogen Detection documentation. https://www.ncbi.nlm.nih.gov/pathogens/antimicrobial-resistance/AMRFinder/
+5. National Center for Biotechnology Information. AMRFinderPlus and NCBI Pathogen Detection documentation. https://www.ncbi.nlm.nih.gov/pathogens/antimicrobial-resistance/AMRFinder/. Accessed 10 Nov 2026
 6. Di Tommaso P, Chatzou M, Floden EW, Barja PP, Palumbo E, Notredame C. Nextflow enables reproducible computational workflows. Nat Biotechnol. 2017;35:316–319. doi:10.1038/nbt.3820.
 7. Mouton JW, Dudley MN, Cars O, Derendorf H, Drusano GL. Standardization of pharmacokinetic/pharmacodynamic (PK/PD) terminology for anti-infective drugs: an update. J Antimicrob Chemother. 2005;55(5):601–607. doi:10.1093/jac/dki079.
