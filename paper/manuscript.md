@@ -1,24 +1,17 @@
 # BioSignal: Development of an evidence-aware framework for antimicrobial resistance data integration and exploratory surveillance
 
 **Godam Sorbari Nichole**  
-Independent Researcher and Developer, BioSignal
+Independent Researcher and Developer, Nigeria
 
-**Manuscript type:** Software development and methods  
-**Development snapshot:** 10 November 2026  
-**Software repository:** https://github.com/jbnikky13/BioSignal  
-**Proposed software version:** 0.1.0 (release candidate; not yet archived)
+**Corresponding author:** Godam Sorbari Nichole (email address to be added before submission)
 
 ## Abstract
 
-**Background:** Antimicrobial resistance (AMR) surveillance draws on heterogeneous sources, including antimicrobial susceptibility testing (AST), pathogen metadata, genomic sequences, and computationally detected resistance markers. These sources describe related but distinct aspects of AMR and can be misinterpreted when provenance, denominators, and evidential limitations are not preserved.
+**Background:** Antimicrobial resistance (AMR) surveillance draws on heterogeneous sources, including antimicrobial susceptibility testing (AST), pathogen metadata, genomic sequences, and computationally detected resistance markers. These sources describe related but distinct aspects of AMR and can be misinterpreted when provenance, denominators, and evidential limitations are not preserved. BioSignal was developed as a research framework for integrating structured AMR observations with public pathogen metadata and genomic evidence while preserving provenance and interpretation boundaries.
 
-**Objective:** To describe the development and current technical status of BioSignal, a research framework for integrating structured AMR observations with public pathogen metadata and genomic evidence while preserving provenance and interpretation boundaries.
+**Results:** BioSignal is implemented primarily in Python, with Nextflow workflow orchestration and GitHub Actions automation. Its modules support structured observation ingestion and normalization, provenance tracking, data-quality checks, pathogen/isolate metadata resolution, FASTA/FASTQ processing, GFF3 annotation parsing, AMRFinderPlus result ingestion, and evidence-aware reporting. Two WHO GLASS bloodstream-infection exports supplied during development contained 114 country-year observations for *Escherichia coli*/ceftriaxone across 19 countries and 66 observations for *Acinetobacter* spp./colistin across 11 countries. A post-hoc next-year-change diagnostic showed substantial error and is not confirmatory validation. Recorded main-branch validation and public-isolate workflow runs on 4 November 2026 passed; a draft validation-readiness branch also passed a pipeline check on 9 November 2026.
 
-**Methods:** BioSignal is implemented primarily in Python, with Nextflow workflow orchestration and GitHub Actions automation. Its modules support structured observation ingestion and normalization, provenance tracking, data-quality checks, pathogen/isolate metadata resolution, FASTA/FASTQ processing, GFF3 annotation parsing, AMRFinderPlus result ingestion, and evidence-aware reporting. Development verification includes automated tests, workflow compilation in stub mode, and public-isolate workflow execution.
-
-**Results:** The implementation includes a canonical AMR observation model, deterministic exploratory signal logic, WHO GLASS dashboard-export parsing and audit utilities, NCBI BioSample-to-assembly resolution, sequence and annotation processing, AMRFinderPlus evidence harmonization, and JSON/Markdown reports. Two WHO GLASS bloodstream-infection exports supplied during development contained 114 country-year observations for *Escherichia coli*/ceftriaxone across 19 countries and 66 observations for *Acinetobacter* spp./colistin across 11 countries. A post-hoc next-year-change diagnostic showed substantial error and is not confirmatory validation. The main-branch validation and public-isolate workflow runs recorded on 4 November 2026 passed; a draft validation-readiness branch also passed its latest recorded pipeline check on 9 November 2026.
-
-**Conclusion:** BioSignal demonstrates an evidence-aware engineering approach to AMR data integration and exploratory reporting. It remains an early research prototype. Independent expert-reviewed validation, complete source-data provenance, and archival reproducibility are required before epidemiological performance or operational utility can be claimed.
+**Conclusions:** BioSignal demonstrates an evidence-aware engineering approach to AMR data integration and exploratory reporting. It remains an early research prototype. Independent expert-reviewed validation, complete source-data provenance, direct comparison with related software, and archival reproducibility are required before epidemiological performance or operational utility can be claimed.
 
 **Keywords:** antimicrobial resistance; AMR surveillance; bioinformatics; data provenance; genomic evidence; WHO GLASS; AMRFinderPlus; reproducible software.
 
@@ -72,11 +65,24 @@ At the development snapshot, the repository's main branch identifies bioinformat
 
 ## Discussion
 
+### User interface and intended use
+
+BioSignal is currently a software framework rather than a hosted web application. Users interact with its Python modules and the Nextflow public-isolate workflow through a command-line environment. The workflow accepts a public NCBI BioSample accession and organism context, retrieves the associated assembly, processes sequence inputs, runs AMRFinderPlus, and writes structured evidence outputs. The repository documents installation, test execution, and workflow invocation. A graphical user interface is not currently implemented. Intended users are bioinformatics researchers and AMR surveillance analysts who need traceable exploratory processing; outputs require expert interpretation and are not clinical or operational recommendations.
+
 ### Relationship to existing resources
 
 BioSignal is designed as an integration and evidence-reporting layer rather than a replacement for established surveillance or genomic detection resources. WHO GLASS provides standardized aggregate surveillance outputs but is not a general-purpose software framework for linking those outputs to isolate-level genomic evidence. NCBI AMRFinderPlus provides curated genomic resistance-marker detection, but it does not by itself perform BioSignal's aggregate AST ingestion, source-comparability checks, or cross-stream evidence-report generation. Nextflow provides workflow orchestration rather than AMR-specific interpretation. BioSignal combines selected capabilities around provenance, normalized observation handling, evidence separation, and reproducible reporting.
 
-No head-to-head benchmark against existing AMR surveillance or genomic analysis platforms has been completed. The manuscript therefore makes no claim of superior accuracy, speed, coverage, or clinical utility. A comparative evaluation of functional coverage, usability, reproducibility, and output interpretation is a prerequisite for a stronger claim of software advance.
+No head-to-head benchmark against existing AMR surveillance or genomic analysis platforms has been completed. The following is a scope comparison, not a performance benchmark:
+
+| Resource | Primary role | BioSignal's relationship | Not established |
+|---|---|---|---|
+| WHO GLASS | Standardized AMR surveillance data collection and reporting | Imports and audits selected aggregate exports; adds local provenance and exploratory summaries | No replacement of GLASS reporting or equivalence to national surveillance |
+| NCBI AMRFinderPlus | Curated detection of AMR genes and selected mutations from sequence data | Consumes and normalizes AMRFinderPlus evidence for downstream reporting | No independent resistance-marker caller or superior detection accuracy |
+| Nextflow | Workflow orchestration and reproducibility | Uses Nextflow to orchestrate the public-isolate workflow | No novel workflow engine |
+| BioSignal | Cross-source normalization, provenance, evidence separation, and exploratory reporting | Integrates selected tasks across the above resources | No validated end-to-end epidemiological performance |
+
+No head-to-head benchmark, systematic feature audit, or user study has been completed. This limits the evidence for the significant-advance criterion in the journal's Software Article policy. The scope table is intended to clarify complementarity, not to imply that the named resources are direct substitutes or that BioSignal outperforms them. A formal comparative evaluation of functional coverage, usability, reproducibility, and output interpretation remains a prerequisite for a stronger claim of software advance.
 
 ### Preliminary exploratory analysis
 
@@ -116,7 +122,7 @@ BioSignal has progressed from a structured AMR data-processing concept to an eng
 
 - **Project name:** BioSignal
 - **Project home page:** https://github.com/jbnikky13/BioSignal
-- **Archived version:** Not yet available; a versioned archive and DOI are release gates.
+- **Archived version:** Not yet available. A DOI-backed archive is required before final submission.
 - **Operating systems:** Linux CI environment; compatible local environments should be verified by the user.
 - **Programming language:** Python 3.11 or later; Nextflow for the public-isolate workflow.
 - **Other requirements:** pytest for tests; Nextflow 26.04.6 for workflow execution; NCBI Datasets CLI and NCBI AMRFinderPlus 4.2.7 for the live public-isolate workflow.
@@ -131,7 +137,7 @@ AMR, antimicrobial resistance; AST, antimicrobial susceptibility testing; CI, co
 
 ### Ethics approval and consent to participate
 
-The described exploratory analyses use aggregate public surveillance exports and public pathogen/genome resources; no human participants were recruited and no patient-level data are described. **Author must verify all source-data provenance and the target journal's ethics requirements before submission.**
+Not applicable. This manuscript does not report research involving human participants, human data, human tissue, or animals. The author must verify that all source datasets and their terms of use support this statement before submission.
 
 ### Consent for publication
 
@@ -139,19 +145,19 @@ Not applicable.
 
 ### Availability of data and materials
 
-The source code is publicly browsable at https://github.com/jbnikky13/BioSignal. The WHO GLASS dashboard exports used in the initial exploratory analysis are not currently included in the repository. Their exact source release, dashboard filters, retrieval dates, and checksums must be recovered and recorded before the reported exploratory results can be independently reproduced. The repository's source-manifest template and reproducibility protocol specify the information required. Public NCBI resources are identified by BioSample and assembly accessions in the workflow outputs. A DOI for an archived software release is not yet available.
+The source code is publicly browsable at https://github.com/jbnikky13/BioSignal. The proposed 0.1.0 version is not yet archived with a DOI. The WHO GLASS dashboard exports used in the initial exploratory analysis are not currently included in the repository. Their exact source release, dashboard filters, retrieval dates, and checksums must be recovered and recorded before the reported exploratory results can be independently reproduced. The repository's source-manifest template and reproducibility protocol specify the information required. Public NCBI resources are identified by BioSample and assembly accessions in the workflow outputs. A DOI for an archived software release is not yet available.
 
 ### Competing interests
 
-**Author confirmation required.** If none, replace this paragraph with: “The author declares that there are no competing interests.”
+The author must confirm whether any financial or non-financial competing interests exist. If none, use: “The author declares that there are no competing interests.”
 
 ### Funding
 
-**Author confirmation required.** If no specific funding was received, replace this paragraph with: “The author received no specific funding for this work.”
+The author must confirm all funding sources. If no specific funding was received, use: “The author received no specific funding for this work.”
 
 ### Authors' contributions
 
-Godam Sorbari Nichole: conceptualization, software, methodology, investigation, data curation, visualization, and writing—original draft. The author should verify this contribution statement against the actual contribution record before submission.
+GSN conceived the project, developed the software, designed the methodology, conducted the exploratory analysis, curated the data, prepared the visualizations, and drafted the manuscript. The author must verify this contribution statement and confirm final approval before submission.
 
 ### Acknowledgements
 
@@ -159,11 +165,11 @@ Not applicable unless individuals or organizations who have agreed to be acknowl
 
 ### Authors' information
 
-Godam Sorbari Nichole is an independent researcher and developer working at the intersection of pharmacy, antimicrobial resistance, and health technology. **Author to confirm the preferred biographical wording and affiliation address.**
+Godam Sorbari Nichole is an independent researcher and developer working at the intersection of pharmacy, antimicrobial resistance, and health technology. The author should confirm the final affiliation wording and address.
 
 ### Corresponding author
 
-**Author to provide a working email address and ORCID if available/required.**
+A working email address and ORCID (if available) must be added before submission.
 
 ### Use of AI-assisted tools
 
