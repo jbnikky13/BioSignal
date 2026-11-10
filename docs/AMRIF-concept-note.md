@@ -3,7 +3,7 @@
 **Technical concept note for scientific collaboration**  
 **Prepared:** 9 November 2026  
 **Project stage:** Early research and engineering prototype  
-**Lead:** Jbnikky13 (independent project; collaborators and institutional affiliations to be confirmed)
+**Lead:** Godam Sorbari Nichole (independent researcher and developer; collaborators and institutional affiliations to be confirmed)
 
 ## 1. Overview and rationale
 
