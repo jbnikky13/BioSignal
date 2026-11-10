@@ -22,7 +22,7 @@ Independent Researcher and Developer, BioSignal
 
 **Keywords:** antimicrobial resistance; AMR surveillance; bioinformatics; data provenance; genomic evidence; WHO GLASS; AMRFinderPlus; reproducible software.
 
-## 1. Introduction
+## Background
 
 Antimicrobial resistance is a major public-health challenge requiring reliable surveillance, laboratory capacity, and integration of epidemiological and microbiological evidence. The World Health Organization's Global Antimicrobial Resistance and Use Surveillance System (GLASS) provides a framework for standardized collection, analysis, and sharing of national AMR surveillance information [1,2].
 
@@ -32,11 +32,11 @@ BioSignal was initiated to explore how heterogeneous AMR observations and genomi
 
 This paper documents the project's objectives, architecture, implemented capabilities, preliminary exploratory analysis, software verification, and current limitations. It does not claim that BioSignal is a validated diagnostic, clinical decision-support, or public-health alerting system.
 
-## 2. Project objectives
+### Project objectives
 
 The development objectives are to: (1) establish a canonical representation for structured AMR observations from heterogeneous sources; (2) preserve provenance and metadata needed to assess comparability; (3) support pathogen and isolate metadata resolution through public resources; (4) process sequence and annotation inputs used in genomic AMR analysis; (5) integrate genomic detection results while preserving their type, method, scope, and review requirements; (6) generate reproducible, evidence-aware reports; and (7) establish a validation pathway requiring independent reference outcomes and expert review before performance claims are made.
 
-## 3. System architecture and implementation
+## Implementation
 
 BioSignal is implemented primarily in Python. Nextflow provides workflow orchestration for public-isolate experiments, while GitHub Actions supports automated validation and reproducible execution [6].
 
@@ -62,21 +62,23 @@ The project generates structured JSON and Markdown reports from genomic evidence
 
 ### 3.6 Workflow reproducibility
 
-A Nextflow public-isolate workflow connects metadata resolution, genome retrieval, sequence validation, AMRFinderPlus execution, and report generation. GitHub Actions provides separate lightweight validation and public integration workflows. The live workflow records relevant software and database versions and input checksums. Complete archival retrieval and pinning of every reference database version remain areas for improvement.
+A Nextflow public-isolate workflow connects metadata resolution, genome retrieval, sequence validation, AMRFinderPlus execution, and report generation. GitHub Actions provides separate lightweight validation and public integration workflows. The live workflow records relevant software and database versions and input checksums. Complete archival retrieval and pinning of every reference database version remain areas for improvement. AI-assisted tools supported parts of manuscript drafting and software documentation; the author remains responsible for reviewing and verifying the final text, code, and scientific claims.
 
-## 4. Development history and current implementation status
+## Results
 
 BioSignal has developed through successive engineering phases. The foundation phase established repository architecture, a canonical AMR observation schema, a deterministic signal engine, public source definitions, and unit tests. The data-engineering phase added CSV ingestion, WHO GLASS data interfaces, provenance, normalization, and data-quality assessment. The bioinformatics phase added pathogen metadata resolution, sequence processing, annotation parsing, AMRFinderPlus evidence integration, isolate matching, and reproducible public-isolate workflows.
 
 At the development snapshot, the repository's main branch identifies bioinformatics as in progress. The intelligence and interface phases are not complete. Draft pull request #7 contains additional work on validation intake, expert feedback, descriptive WHO-region summaries, and documentation. Its latest recorded pipeline validation passed on 9 November 2026. Because this work remains unmerged, it is described as ongoing development rather than an established main-branch release.
 
-## 5. Relationship to existing resources
+## Discussion
+
+### Relationship to existing resources
 
 BioSignal is designed as an integration and evidence-reporting layer rather than a replacement for established surveillance or genomic detection resources. WHO GLASS provides standardized aggregate surveillance outputs but is not a general-purpose software framework for linking those outputs to isolate-level genomic evidence. NCBI AMRFinderPlus provides curated genomic resistance-marker detection, but it does not by itself perform BioSignal's aggregate AST ingestion, source-comparability checks, or cross-stream evidence-report generation. Nextflow provides workflow orchestration rather than AMR-specific interpretation. BioSignal combines selected capabilities around provenance, normalized observation handling, evidence separation, and reproducible reporting.
 
 No head-to-head benchmark against existing AMR surveillance or genomic analysis platforms has been completed. The manuscript therefore makes no claim of superior accuracy, speed, coverage, or clinical utility. A comparative evaluation of functional coverage, usability, reproducibility, and output interpretation is a prerequisite for a stronger claim of software advance.
 
-## 6. Preliminary exploratory analysis
+### Preliminary exploratory analysis
 
 A preliminary exploratory exercise used two WHO GLASS dashboard CSV exports supplied during BioSignal development: bloodstream infection, *E. coli*/ceftriaxone, 2018–2023; and bloodstream infection, *Acinetobacter* spp./colistin, 2018–2023. The first export contained 114 country-year rows from 19 countries; the second contained 66 rows from 11 countries.
 
@@ -90,33 +92,25 @@ For *E. coli*/ceftriaxone, the selected rule produced nine true positives and 27
 
 The original WHO GLASS CSV exports are not currently included in the repository. Consequently, the counts and exploratory diagnostic results in this section cannot yet be independently recomputed from the repository contents alone. The repository now includes a source-data manifest template and a reproducibility protocol specifying the metadata, checksums, and rerun steps required before a fully reproducible archival release.
 
-## 7. Software and workflow verification
+### Software and workflow verification
 
 The repository uses automated tests and workflow checks to assess implementation integrity. The latest recorded main-branch pipeline validation completed successfully on 4 November 2026. The latest recorded public-isolate execution on main also completed successfully on that date. An earlier public-isolate run failed during report acceptance checks; a subsequent order-sensitive validation correction was followed by a successful run. The latest pipeline validation associated with the draft validation-readiness pull request completed successfully on 9 November 2026.
 
 These results demonstrate that specified software checks and recorded workflow executions completed. They do not constitute independent biological validation, establish epidemiological accuracy, or demonstrate clinical utility. A Nextflow stub-mode run validates workflow structure only; stub outputs are placeholders and contain no biological analysis.
 
-## 8. Limitations
+### Limitations
 
 Several limitations remain. First, the project does not yet have a sufficiently documented independent cohort with expert-reviewed reference outcomes for evaluating its surveillance signals. Second, the initial WHO GLASS analysis is post-hoc and limited to two pathogen–antibiotic combinations and the countries represented in the supplied exports. Third, the reviewed country-level exports cannot be assumed to represent national populations, WHO regions, or global AMR burden. Fourth, available metadata checks cannot account for all differences in patient populations, sampling practices, laboratory methods, testing indications, or duplicate-isolate handling. Fifth, signal thresholds and the data-quality score have not been established as calibrated statistical or epidemiological measures. Sixth, genomic detection and phenotypic AST remain separate evidence streams unless verified isolate-level matching and appropriate interpretation are available. Seventh, the source CSV exports underlying the exploratory analysis are not yet archived with complete provenance. Finally, the project is not approved for clinical diagnosis, treatment decisions, public-health alerting, or routine operational surveillance.
 
-## 9. Future work
+### Future work
 
 The next development stage should prioritize expert review of scientific assumptions and the evidence model; acquisition of an independently sourced, provenance-documented validation cohort; pre-specification of outcome definitions and evaluation protocols; site- or country-level holdouts and cluster-aware uncertainty analysis; independent assessment of the data-quality heuristic using expert-adjudicated quality labels; broader pathogen–antibiotic coverage and explicit representativeness assessments; and improved archival reproducibility of reference databases and software environments.
 
 An adjacent research direction is pharmacometrics, particularly pharmacokinetic/pharmacodynamic (PK/PD) modelling of antimicrobial exposure, efficacy, and resistance emergence. Such work could eventually complement AMR surveillance by examining how antimicrobial exposure relates to microbiological outcomes and by supporting model-informed dose research. It is not part of the current BioSignal implementation, and BioSignal does not estimate drug exposure, recommend doses, or perform PK/PD simulations. Any future integration would require appropriate concentration, MIC, dosing, patient covariate, and outcome data, validated models, and pharmacometric expertise [7].
 
-## 10. Conclusion
+## Conclusions
 
 BioSignal has progressed from a structured AMR data-processing concept to an engineering prototype that integrates surveillance observations, public pathogen metadata, genomic analysis, and evidence-aware reporting. Its central design principle is to preserve distinctions between evidence types and make uncertainty and limitations explicit. The initial exploratory analysis illustrates both the potential usefulness and the risks of deriving surveillance signals from heterogeneous country-level data. The project is not yet scientifically calibrated or clinically validated. Its immediate priorities are source-data archival, independent expert review, validation data, and reproducible evaluation before stronger claims about surveillance performance can be made.
-
-## Data availability
-
-The source code is publicly browsable at https://github.com/jbnikky13/BioSignal. The WHO GLASS dashboard exports used in the initial exploratory analysis are not currently included in the repository. Their exact source release, dashboard filters, retrieval dates, and checksums must be recovered and recorded before the reported exploratory results can be independently reproduced. The repository's source-manifest template and reproducibility protocol specify the information required. Public NCBI resources are identified by BioSample and assembly accessions in the workflow outputs. A DOI for an archived software release is not yet available.
-
-## Software availability
-
-BioSignal source code: https://github.com/jbnikky13/BioSignal. The project metadata specify Apache-2.0; the release-preparation branch adds the corresponding licence text and citation metadata. The proposed software version is 0.1.0. A version tag and permanent archive DOI must be created after review and successful validation of the release commit. The software is a research prototype and is not intended for clinical or operational use.
 
 ## Availability and requirements
 
