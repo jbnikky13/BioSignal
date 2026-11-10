@@ -1,0 +1,3 @@
+source_id,source_name,source_url,source_release_or_version,retrieval_date_utc,export_filename,sha256,organism,antimicrobial,specimen_or_infection_type,year_start,year_end,geographic_scope,selected_filters,table_or_sheet_used,denominator_definition,notes
+WHO-GLASS-ECOLI-CTX,,,,,,,,Escherichia coli,ceftriaxone,bloodstream infection,2018,2023,,"",Data for line plots for individual CTAs,interpretable AST count,"Record dashboard filters exactly; preserve original file unchanged"
+WHO-GLASS-ACINETOBACTER-COL,,,,,,,,Acinetobacter spp.,colistin,bloodstream infection,2018,2023,,"",Data for line plots for individual CTAs,interpretable AST count,"Record dashboard filters exactly; preserve original file unchanged"

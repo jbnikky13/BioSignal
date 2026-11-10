@@ -2,7 +2,7 @@
 
 **Biological health intelligence for pathogen surveillance and antimicrobial-resistance signals.**
 
-BioSignal is an open-source research and engineering project for turning aggregated biological and clinical observations into explainable signals about pathogens, antimicrobial resistance (AMR), and temporal/geographic trends.
+BioSignal is an Apache-2.0-licensed open-source research and engineering project for turning aggregated biological and clinical observations into explainable signals about pathogens, antimicrobial resistance (AMR), and temporal/geographic trends.
 
 > **Core principle:** intelligence, not identities.
 
@@ -65,13 +65,13 @@ Public / permitted data
 - [x] Lightweight CI compile/test gate for the Nextflow workflow
 - [x] Scheduled public integration workflow
 
-## Phase 4 — Intelligence — NOT STARTED
+## Phase 4 — Intelligence — EARLY IMPLEMENTATION
+- [x] Descriptive WHO country-year and region-year summaries (not population-representative)
 - [ ] Temporal anomaly detection
-- [ ] Geographic aggregation
-- [ ] AMR trend analysis
+- [ ] Calibrated AMR trend analysis
 - [ ] Genomic resistance-marker analysis
 - [ ] Genotype/phenotype relationship analysis
-- [ ] Signal calibration against published surveillance metrics
+- [ ] Signal calibration against independent surveillance outcomes
 
 ## Phase 5 — Interface — NOT STARTED
 - [ ] Research dashboard
@@ -84,6 +84,14 @@ Public / permitted data
 WHO GLASS surveillance includes phenotypic resistance measurements, while NCBI AMRFinderPlus identifies AMR genes and resistance-associated point mutations using curated references and HMMs. These are complementary evidence types, not interchangeable measurements.
 
 BioSignal therefore reports genomic evidence separately from phenotype. A detected AMR gene or mutation does **not** automatically prove phenotypic resistance, particularly when genomic and phenotype observations are not from the same isolate. The linkage layer preserves this limitation explicitly.
+
+## Reproducible release and citation
+
+The project is licensed under Apache-2.0. See [LICENSE](LICENSE) and [CITATION.cff](CITATION.cff). The proposed 0.1.0 release candidate is not yet a DOI-backed archive. Follow the [reproducibility and release protocol](docs/reproducibility-and-release.md) before creating a version tag or citing a permanent release.
+
+The original WHO GLASS exports used in the exploratory pilot are not currently stored in the repository. Use the [source-data manifest template](data/examples/who-glass-source-manifest.csv) to record exact filters, retrieval dates, source versions, and checksums before claiming independent reproduction of those analyses.
+
+The adjacent pharmacometrics/PK-PD research direction is prospective only; no pharmacometric modelling or dose recommendation is implemented in BioSignal.
 
 ## Governance
 
@@ -230,3 +238,26 @@ python scripts/audit_who_glass_export.py path/to/who-glass-resistance-export.csv
 ```
 
 A successful structural audit is not scientific validation. Pooled rates are not global population estimates, and the current WHO GLASS pilot exports do not provide independent quality labels. See [the WHO GLASS validation protocol](docs/who-glass-validation-protocol.md) and [the initial exploratory report](docs/initial-who-glass-exploratory-evaluation.md). Raw user-provided CSVs are not committed to this repository.
+
+
+## Scientific collaboration and surveillance readiness
+
+The project includes an AMRIF technical concept note and an expert-feedback pathway:
+- [AMRIF technical concept note](docs/AMRIF-concept-note.md)
+- [Expert feedback plan](docs/expert-feedback-plan.md)
+- [Expert feedback register](docs/review/feedback-register.md)
+
+The validation cohort intake requirements are documented in [the validation dataset specification](docs/validation-dataset-specification.md). The empty [validation dataset template](data/examples/validation_dataset_template.csv) is a schema only; it contains no invented outcomes. A dataset must pass provenance, governance, independent-label, and protocol review before it can be treated as an evaluation cohort.
+
+Descriptive WHO-region/year summaries can be generated from a downloaded WHO GLASS dashboard export:
+
+```bash
+python scripts/build_surveillance_summary.py path/to/who-glass-export.csv \
+  --output-json reports/who-glass-summary.json \
+  --country-year-csv reports/who-glass-country-years.csv \
+  --region-year-csv reports/who-glass-region-years.csv
+```
+
+The summary reports country coverage, resistant counts, interpretable AST denominators, pooled descriptive rates, and median country rates by WHO region and year. WHO regions are not subnational geography; pooled rates are not population-representative estimates. Missing country-years are not imputed. These outputs are descriptive only and do not fit alerts or establish scientific validation.
+
+A dashboard remains a later interface milestone, after expert review of the data model, coverage, and summaries.
