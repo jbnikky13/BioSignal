@@ -22,14 +22,16 @@ BMC Bioinformatics software articles are expected to describe a tool with broad 
 
 ## Scientific and reproducibility requirements
 
-- [ ] Recover the exact two WHO GLASS CSV exports used in the pilot.
-- [ ] Record dashboard URL, retrieval date, selected filters, source release/version (if available), table name, and SHA-256 checksum in `data/examples/who-glass-source-manifest.csv`.
-- [ ] Confirm redistribution permissions. Do not commit source data unless permitted.
-- [ ] Re-run both audits and the exploratory calculations from the preserved originals.
-- [ ] Compare regenerated outputs with the values reported in the manuscript and explain any discrepancy.
+- [x] Locate two WHO GLASS exports whose filters, 2018–2023 coverage, country-year row counts, and country counts match the pilot datasets described in the manuscript. Their exact historical identity as the original downloads is not independently established.
+- [x] Record the filenames, observed dashboard filters, and SHA-256 checksums for both resistance exports and the auxiliary testing-coverage export in `data/examples/who-glass-source-manifest.csv`.
+- [ ] Recover or verify the original dashboard URL, download/retrieval date, and source release/version; these details are not embedded in the uploaded files.
+- [ ] Confirm redistribution permissions. Do not commit raw source exports unless permitted; the uploaded files remain outside the public repository.
+- [x] Re-run structural integrity checks and descriptive country-year calculations against the recovered resistance exports.
+- [x] Recompute the documented post-hoc next-year diagnostic using the exploratory report's stated rule.
+- [x] Reconcile the recovered exports with the manuscript and exploratory report: row counts, country counts, balanced panels, pooled yearly percentages, and diagnostic confusion matrices match.
 - [ ] Conduct a functional comparison with relevant tools/resources (e.g., WHO GLASS, NCBI AMRFinderPlus, and comparable AMR data-integration tools); do not imply a performance advantage without evidence.
 - [ ] Obtain independent AMR expert review of the interpretation boundaries and proposed validation protocol.
-- [ ] Keep pharmacometrics/PK-PD explicitly described as future complementary work; it is not implemented in BioSignal.
+- [x] Keep pharmacometrics/PK-PD explicitly described as future complementary work; it is not implemented in BioSignal.
 
 ## Software release requirements
 
