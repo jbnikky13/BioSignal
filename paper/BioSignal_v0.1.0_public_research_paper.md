@@ -187,7 +187,7 @@ The project is open to scoped collaboration in the following areas:
 
 ### 6.3 How to contribute feedback
 
-Researchers may open a discussion or issue in the public repository: https://github.com/jbnikky13/BioSignal. Feedback is most useful when it identifies the relevant section, describes the scientific or technical concern, explains its potential impact, and—where possible—suggests a reference, dataset, protocol, or test that could help resolve it.
+Researchers may contribute through the public repository or by email. The external scientific feedback issue is available at https://github.com/jbnikky13/BioSignal/issues/new (search for “External scientific feedback and collaboration: BioSignal 0.1.0” in the repository issue list). Researchers who do not use GitHub may email godamsorbari13@gmail.com with the subject “BioSignal 0.1.0 — Scientific Feedback”. Feedback is most useful when it identifies the relevant section, describes the scientific or technical concern, explains its potential impact, and—where possible—suggests a reference, dataset, protocol, or test that could help resolve it.
 
 Potential collaborators may use the repository to propose a focused review, validation exercise, benchmarking study, or implementation contribution. Any use of restricted or sensitive data must be discussed and governed before transfer or analysis. Please do not upload patient-identifiable or otherwise restricted data to public issues.
 
@@ -241,7 +241,7 @@ Version 0.1.0 is published as a transparent development snapshot and an invitati
 
 **Acknowledgements:** No external scientific reviewers or institutional collaborators are listed at this stage. Future acknowledgements will be added only with the relevant individuals' permission.
 
-**Use of AI-assisted tools:** AI-assisted tools supported parts of software development, documentation, and manuscript preparation. The author is responsible for reviewing the code, analyses, references, and scientific claims. This disclosure should be adapted to the requirements of any future publication venue.
+**Use of AI-assisted tools:** AI-assisted tools were used selectively as supporting aids during parts of software development, documentation, and manuscript editing. They did not replace the author’s direction of the project, scientific judgement, or responsibility for the work. The author determined the research questions and development priorities, reviewed and revised project outputs, and takes responsibility for the code, data handling, analyses, interpretation, references, and claims presented here. The use of such tools should not be taken to mean that the research design, scientific reasoning, or substantive project work was delegated to an AI system. This disclosure should be adapted to the requirements of any future publication venue.
 
 **Author information:** Godam Sorbari Nichole is an independent researcher and developer based in Port Harcourt, Rivers State, Nigeria. Her interests include antimicrobial resistance surveillance, pharmacometrics, pharmaceutical systems, digital health, and the application of data science and artificial intelligence to healthcare challenges in Africa.
 
