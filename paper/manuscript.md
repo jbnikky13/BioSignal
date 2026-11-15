@@ -147,7 +147,7 @@ The source code is publicly browsable at https://github.com/jbnikky13/BioSignal.
 
 ### Funding
 
-**Author confirmation required.** If no specific funding was received, replace this paragraph with: “The author received no specific funding for this work.”
+The author received no specific funding for this work.
 
 ### Authors' contributions
 
@@ -163,7 +163,7 @@ Godam Sorbari Nichole is an independent researcher and developer working at the 
 
 ### Corresponding author
 
-**Author to provide a working email address and ORCID if available/required.**
+Corresponding author email: godamsorbari13@gmail.com. ORCID iD: not currently available; this may be added if the author registers before submission.
 
 ### Use of AI-assisted tools
 
