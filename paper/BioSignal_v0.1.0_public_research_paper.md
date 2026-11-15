@@ -187,7 +187,7 @@ The project is open to scoped collaboration in the following areas:
 
 ### 6.3 How to contribute feedback
 
-Researchers may contribute through the public repository or by email. The external scientific feedback issue is available at https://github.com/jbnikky13/BioSignal/issues/new (search for “External scientific feedback and collaboration: BioSignal 0.1.0” in the repository issue list). Researchers who do not use GitHub may email godamsorbari13@gmail.com with the subject “BioSignal 0.1.0 — Scientific Feedback”. Feedback is most useful when it identifies the relevant section, describes the scientific or technical concern, explains its potential impact, and—where possible—suggests a reference, dataset, protocol, or test that could help resolve it.
+Researchers may contribute through the public repository or by email. The external scientific feedback issue is available at https://github.com/jbnikky13/BioSignal/issues/8. Researchers who do not use GitHub may email godamsorbari13@gmail.com with the subject “BioSignal 0.1.0 — Scientific Feedback”. Feedback is most useful when it identifies the relevant section, describes the scientific or technical concern, explains its potential impact, and—where possible—suggests a reference, dataset, protocol, or test that could help resolve it.
 
 Potential collaborators may use the repository to propose a focused review, validation exercise, benchmarking study, or implementation contribution. Any use of restricted or sensitive data must be discussed and governed before transfer or analysis. Please do not upload patient-identifiable or otherwise restricted data to public issues.
 
