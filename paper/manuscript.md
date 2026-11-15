@@ -1,7 +1,7 @@
 # BioSignal: Development of an evidence-aware framework for antimicrobial resistance data integration and exploratory surveillance
 
 **Godam Sorbari Nichole**  
-Independent Researcher and Developer, BioSignal
+Independent Researcher and Developer, BioSignal, Port Harcourt, Rivers State, Nigeria
 
 **Manuscript type:** Software development and methods  
 **Development snapshot:** 10 November 2026  
@@ -159,7 +159,7 @@ Godam Sorbari Nichole is an independent researcher and developer working at the 
 
 ### Corresponding author
 
-Corresponding author email: godamsorbari13@gmail.com. ORCID iD: not currently available; this may be added if the author registers before submission.
+Corresponding author email: godamsorbari13@gmail.com. ORCID account: registered; ORCID iD to be inserted before submission.
 
 ### Use of AI-assisted tools
 
