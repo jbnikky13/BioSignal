@@ -155,7 +155,7 @@ Not applicable unless individuals or organizations who have agreed to be acknowl
 
 ### Authors' information
 
-Godam Sorbari Nichole is an independent researcher and developer working at the intersection of pharmacy, antimicrobial resistance, and health technology. **Author to confirm the preferred biographical wording and affiliation address.**
+Godam Sorbari Nichole is an independent researcher and developer based in Port Harcourt, Rivers State, Nigeria. Her interests include antimicrobial resistance surveillance, pharmacometrics, pharmaceutical systems, digital health, and the application of data science and artificial intelligence to healthcare challenges in Africa.
 
 ### Corresponding author
 
