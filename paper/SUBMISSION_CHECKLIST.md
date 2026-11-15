@@ -9,6 +9,7 @@ BMC Bioinformatics software articles are expected to describe a tool with broad 
 ## Author confirmations required
 
 - [x] Confirm full affiliation address: Port Harcourt, Rivers State, Nigeria.
+- [x] Confirm author biography and research-interest wording, including pharmacometrics as an interest rather than an implemented BioSignal capability.
 - [x] Confirm corresponding-author email: godamsorbari13@gmail.com.
 - [x] ORCID iD supplied: https://orcid.org/0009-0000-5349-7784. Add it to the submission system. The current BMC Software Article instructions do not list ORCID as a required manuscript item.
 - [x] Confirm funding statement: no specific research funding.
