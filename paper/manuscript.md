@@ -1,3 +1,7 @@
+> **ARCHIVED DRAFT — SUPERSEDED 15 NOVEMBER 2026**
+>
+> This earlier manuscript draft is retained for development history and is not the current public paper. Use [BioSignal 0.1.0: An evolving evidence-aware framework for antimicrobial resistance data integration and exploratory surveillance](BioSignal_v0.1.0_public_research_paper.md) as the authoritative public research paper. Its methods, data-recovery notes, validation caveats, and AI-assisted-tools declaration supersede this draft.
+
 # BioSignal: Development of an evidence-aware framework for antimicrobial resistance data integration and exploratory surveillance
 
 **Godam Sorbari Nichole**  
