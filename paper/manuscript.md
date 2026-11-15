@@ -139,7 +139,7 @@ The source code is publicly browsable at https://github.com/jbnikky13/BioSignal.
 
 ### Competing interests
 
-**Author confirmation required.** If none, replace this paragraph with: “The author declares that there are no competing interests.”
+The author declares that there are no competing interests.
 
 ### Funding
 
@@ -159,7 +159,7 @@ Godam Sorbari Nichole is an independent researcher and developer working at the 
 
 ### Corresponding author
 
-Corresponding author email: godamsorbari13@gmail.com. ORCID account: registered; ORCID iD to be inserted before submission.
+Corresponding author email: godamsorbari13@gmail.com. ORCID iD: https://orcid.org/0009-0000-5349-7784.
 
 ### Use of AI-assisted tools
 
