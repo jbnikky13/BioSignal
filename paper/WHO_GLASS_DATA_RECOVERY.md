@@ -68,12 +68,14 @@ The release must make clear which inputs are publicly redistributable, which mus
 
 ## Current status
 
-- [ ] Original CSV exports located.
-- [ ] Source identity and filters verified.
-- [ ] SHA-256 checksums recorded in the manifest.
-- [ ] Redistribution terms checked.
-- [ ] Analysis rerun from preserved source files.
-- [ ] Manuscript figures and numerical claims reconciled.
+- [x] Two resistance exports located whose filters, years, row counts, and country counts match the manuscript's two described datasets. The files' exact historical identity as the original downloads is not independently established.
+- [x] Dashboard filters and data-row contents verified against the uploaded files.
+- [x] SHA-256 checksums recorded in the source manifest for both resistance exports and the auxiliary testing-coverage export.
+- [ ] Original dashboard URL, download/retrieval date, and source release/version recovered or verified; these details are not embedded in the files.
+- [ ] Redistribution terms checked; raw exports remain outside the public repository pending this check.
+- [x] Structural integrity and descriptive analyses rerun against the uploaded resistance exports.
+- [x] The documented post-hoc next-year diagnostic was recomputed and its reported confusion matrices reproduced.
+- [x] Manuscript's reported row counts, pooled yearly percentages, and diagnostic results reconciled with the uploaded files.
 - [ ] Reproducibility materials reviewed on the final release commit.
 
 Until these checks are complete, the manuscript must continue to disclose that the original exports are not archived in the repository and the exploratory analysis cannot be independently rerun from repository contents alone.
