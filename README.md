@@ -86,6 +86,8 @@ WHO GLASS surveillance includes phenotypic resistance measurements, while NCBI A
 BioSignal therefore reports genomic evidence separately from phenotype. A detected AMR gene or mutation does **not** automatically prove phenotypic resistance, particularly when genomic and phenotype observations are not from the same isolate. The linkage layer preserves this limitation explicitly.
 
 ## Reproducible release and citation
+The public research and software-development paper is [BioSignal 0.1.0](paper/BioSignal_v0.1.0_public_research_paper.md). It documents the current prototype, exploratory WHO GLASS analysis, limitations, and an invitation for external scientific review and collaboration. It is a development paper, not evidence of completed independent validation or a DOI-archived software release.
+
 
 The project is licensed under Apache-2.0. See [LICENSE](LICENSE) and [CITATION.cff](CITATION.cff). The proposed 0.1.0 release candidate is not yet a DOI-backed archive. Follow the [reproducibility and release protocol](docs/reproducibility-and-release.md) before creating a version tag or citing a permanent release.
 
