@@ -24,7 +24,7 @@ BMC Bioinformatics software articles are expected to describe a tool with broad 
 
 - [x] Locate two WHO GLASS exports whose filters, 2018–2023 coverage, country-year row counts, and country counts match the pilot datasets described in the manuscript. Their exact historical identity as the original downloads is not independently established.
 - [x] Record the filenames, observed dashboard filters, and SHA-256 checksums for both resistance exports and the auxiliary testing-coverage export in `data/examples/who-glass-source-manifest.csv`.
-- [ ] Recover or verify the original dashboard URL, download/retrieval date, and source release/version; these details are not embedded in the uploaded files.
+- [x] Record the official WHO GLASS dashboard landing URL linked from WHO's GLASS programme page in the source manifest. The exact chart/export view, original download/retrieval date, and source release/version remain unverified because they are not embedded in the files.
 - [ ] Confirm redistribution permissions. Do not commit raw source exports unless permitted; the uploaded files remain outside the public repository.
 - [x] Re-run structural integrity checks and descriptive country-year calculations against the recovered resistance exports.
 - [x] Recompute the documented post-hoc next-year diagnostic using the exploratory report's stated rule.
