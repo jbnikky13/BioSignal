@@ -8,9 +8,10 @@ BMC Bioinformatics software articles are expected to describe a tool with broad 
 
 ## Author confirmations required
 
-- [ ] Confirm full affiliation address (city and country) and corresponding-author email.
-- [ ] Provide ORCID if available.
-- [ ] Confirm funding statement.
+- [ ] Confirm full affiliation address (city and country).
+- [x] Confirm corresponding-author email: godamsorbari13@gmail.com.
+- [ ] Register ORCID if desired before submission; the current BMC Software Article instructions do not list ORCID as a required manuscript item.
+- [x] Confirm funding statement: no specific research funding.
 - [ ] Confirm competing-interests statement.
 - [ ] Verify ethics statement and the exact provenance/terms of all public datasets.
 - [ ] Verify CRediT contributions.
@@ -53,7 +54,7 @@ BMC Bioinformatics software articles are expected to describe a tool with broad 
 - [ ] Supplementary source code/test data package suitable for anonymous review.
 - [ ] Cover letter tailored to the final target journal.
 
-## Journal references checked on 10 November 2026
+## Journal references checked on 15 November 2026
 
 - BMC Bioinformatics software article criteria: https://link.springer.com/journal/12859/submission-guidelines/software-article
 - BMC Bioinformatics general submission guidance and current APC: https://link.springer.com/journal/12859/submission-guidelines
