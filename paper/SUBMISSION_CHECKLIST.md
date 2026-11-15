@@ -39,7 +39,7 @@ BMC Bioinformatics software articles are expected to describe a tool with broad 
 - [ ] Run a clean install and the full pytest suite on the final release commit.
 - [ ] Run the Nextflow stub workflow on the final release commit.
 - [ ] Run the public-isolate workflow on the final release commit and retain the artifact, tool/database versions, checksum, trace, and report.
-- [ ] Review all tests and workflow checks after the latest commits; the 9 November 2026 passing run predates the release-preparation commits.
+- [x] Re-run PR-triggered package installation, pytest, resolver checks, and Nextflow stub-mode validation on the latest paper/README commit (15 November 2026; GitHub Actions run 43682240551). This is software/workflow verification only; it does not replace the separate live public-isolate run on a release commit or scientific validation.
 - [ ] Review the release archive and citation metadata.
 - [ ] Create a version tag only after all checks pass.
 - [ ] Archive the exact tagged source in Zenodo (or an equivalent repository) and obtain a DOI.
