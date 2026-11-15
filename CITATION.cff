@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use BioSignal, please cite it as software."
+title: "BioSignal"
+abstract: "An evidence-aware research and engineering framework for antimicrobial resistance data integration, pathogen metadata processing, genomic evidence handling, and exploratory surveillance summaries."
+authors:
+  - family-names: "Nichole"
+    given-names: "Godam Sorbari"
+    affiliation: "Independent Researcher and Developer, BioSignal"
+version: "0.1.0"
+type: software
+repository-code: "https://github.com/jbnikky13/BioSignal"
+license: Apache-2.0

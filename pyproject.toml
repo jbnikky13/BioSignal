@@ -9,7 +9,7 @@ description = "Explainable pathogen and antimicrobial-resistance intelligence si
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "Apache-2.0"}
-authors = [{name = "Jbnikky"}]
+authors = [{name = "Godam Sorbari Nichole"}]
 dependencies = []
 
 [project.optional-dependencies]
