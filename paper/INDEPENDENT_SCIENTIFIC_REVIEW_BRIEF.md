@@ -3,7 +3,8 @@
 **Purpose:** Request critical scientific and technical feedback from antimicrobial-resistance (AMR), microbiology, epidemiology, bioinformatics, and surveillance researchers.
 
 **Project:** BioSignal — https://github.com/jbnikky13/BioSignal  
-**Review status:** Pre-publication, independent expert review requested  
+**Review status:** Public scientific feedback invited; independent expert review not yet completed
+**Public feedback:** https://github.com/jbnikky13/BioSignal/issues/8  
 **Development snapshot:** November 2026  
 **Author:** Godam Sorbari Nichole, Independent Researcher and Developer, Port Harcourt, Nigeria  
 **Contact:** godamsorbari13@gmail.com
