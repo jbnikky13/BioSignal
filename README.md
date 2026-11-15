@@ -88,6 +88,8 @@ BioSignal therefore reports genomic evidence separately from phenotype. A detect
 ## Reproducible release and citation
 The public research and software-development paper is [BioSignal 0.1.0](paper/BioSignal_v0.1.0_public_research_paper.md). It documents the current prototype, exploratory WHO GLASS analysis, limitations, and an invitation for external scientific review and collaboration. It is a development paper, not evidence of completed independent validation or a DOI-archived software release.
 
+**External scientific feedback:** Researchers are invited to review the project through [issue #8](https://github.com/jbnikky13/BioSignal/issues/8), which lists the priority questions from Section 6 of the paper. Researchers who do not use GitHub can email [godamsorbari13@gmail.com](mailto:godamsorbari13@gmail.com) with the subject “BioSignal 0.1.0 — Scientific Feedback”.
+
 
 The project is licensed under Apache-2.0. See [LICENSE](LICENSE) and [CITATION.cff](CITATION.cff). The proposed 0.1.0 release candidate is not yet a DOI-backed archive. Follow the [reproducibility and release protocol](docs/reproducibility-and-release.md) before creating a version tag or citing a permanent release.
 
