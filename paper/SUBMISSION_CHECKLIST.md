@@ -8,9 +8,9 @@ BMC Bioinformatics software articles are expected to describe a tool with broad 
 
 ## Author confirmations required
 
-- [ ] Confirm full affiliation address (city and country).
+- [x] Confirm full affiliation address: Port Harcourt, Rivers State, Nigeria.
 - [x] Confirm corresponding-author email: godamsorbari13@gmail.com.
-- [ ] Register ORCID if desired before submission; the current BMC Software Article instructions do not list ORCID as a required manuscript item.
+- [x] Author confirms an ORCID account has been created; insert the exact ORCID iD in the manuscript and submission system before submission. The current BMC Software Article instructions do not list ORCID as a required manuscript item.
 - [x] Confirm funding statement: no specific research funding.
 - [ ] Confirm competing-interests statement.
 - [ ] Verify ethics statement and the exact provenance/terms of all public datasets.
