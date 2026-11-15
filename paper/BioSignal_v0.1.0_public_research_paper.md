@@ -84,7 +84,7 @@ The project records relevant software versions and input checksums in workflow o
 
 ### 3.1 Source and scope
 
-The exploratory exercise used two WHO GLASS dashboard CSV exports supplied by the author during development. The author reports downloading the files in late October 2026; the exact calendar date is not known. The dashboard landing page is recorded as https://www.who.int/initiatives/glass/, which links to the GLASS data visualization dashboard [8]. The exact chart/export view and source release/version were not captured in the CSV files.
+The exploratory exercise used two WHO GLASS dashboard CSV exports supplied by the author during development. The author reports downloading the files in late October 2026; the exact calendar date is not known. The dashboard landing page is recorded as https://www.who.int/initiatives/glass/, which links to the GLASS data visualization dashboard [7]. The exact chart/export view and source release/version were not captured in the CSV files.
 
 The two resistance exports were:
 
