@@ -3,7 +3,7 @@
 **Godam Sorbari Nichole**  
 Independent Researcher and Developer, Nigeria
 
-**Corresponding author:** Godam Sorbari Nichole (email address to be added before submission)
+**Corresponding author:** Godam Sorbari Nichole (godamsorbari13@gmail.com)
 
 ## Abstract
 
@@ -153,7 +153,7 @@ The author must confirm whether any financial or non-financial competing interes
 
 ### Funding
 
-The author must confirm all funding sources. If no specific funding was received, use: “The author received no specific funding for this work.”
+The author received no specific funding for this work.
 
 ### Authors' contributions
 
@@ -169,7 +169,7 @@ Godam Sorbari Nichole is an independent researcher and developer working at the 
 
 ### Corresponding author
 
-A working email address and ORCID (if available) must be added before submission.
+Corresponding author email: godamsorbari13@gmail.com. ORCID iD: not currently available; this can be added if the author registers before submission.
 
 ### Use of AI-assisted tools
 
